@@ -34,6 +34,12 @@ let shuttingDown = false
 app.setName('ShieldBar')
 app.setAppUserModelId(APP_ID)
 
+if (RENDER_PREVIEW) {
+  // CI runners have no stable GPU surface; software rendering makes
+  // capturePage deterministic for the documentation screenshots.
+  app.disableHardwareAcceleration()
+}
+
 let primaryInstance = true
 if (!CLI_MODE) {
   primaryInstance = app.requestSingleInstanceLock()

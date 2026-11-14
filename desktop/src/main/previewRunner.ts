@@ -61,13 +61,9 @@ export async function renderPreviews(outputDirectory?: string): Promise<number> 
       await window.loadFile(rendererHtml, { search: `preview=${state}` })
       await loaded
       // Allow React to paint and any ResizeObserver-driven layout to settle.
-      await new Promise((resolve) => setTimeout(resolve, 400))
+      await new Promise((resolve) => setTimeout(resolve, 600))
 
-      const image = await window.webContents.capturePage()
-      const png = image.toPNG()
-
-      if (!png.length) throw new Error('capturePage returned an empty image')
-
+      const png = await captureWithRetry(window)
       const filename = previewFilename(state)
       await writeFile(join(directory, filename), png)
       process.stdout.write(`Rendered ${filename}\n`)
@@ -86,4 +82,30 @@ export async function renderPreviews(outputDirectory?: string): Promise<number> 
 
 function previewFilename(state: PreviewState): string {
   return state === 'welcome' ? 'dashboard-welcome.png' : `dashboard-${state}.png`
+}
+
+/**
+ * The very first capture on a fresh CI compositor can fail with
+ * "UnknownVizError" before the surface is ready. Retry briefly.
+ */
+async function captureWithRetry(window: BrowserWindow): Promise<Buffer> {
+  let lastError: unknown = null
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      const image = await window.webContents.capturePage()
+      const png = image.toPNG()
+      if (png.length > 0) return png
+      lastError = new Error('capturePage returned an empty image')
+    } catch (error) {
+      lastError = error
+    }
+
+    if (attempt < 4) {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+    }
+  }
+
+  const message = lastError instanceof Error ? lastError.message : 'unknown error'
+  throw new Error(`capturePage failed after retries: ${message}`)
 }
