@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "desktop/**"
+      - "helper/**"
       - ".github/workflows/desktop-build.yml"
     tags:
       - "v*"
