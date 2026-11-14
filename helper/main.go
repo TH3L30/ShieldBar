@@ -78,7 +78,7 @@ func runInstall(args []string) {
 		}
 	}
 
-	if os.Geteuid() != 0 {
+	if !isElevated() {
 		fatalf("install must run as root/administrator")
 	}
 	if runtime.GOOS != "windows" && cfg.AllowedUID < 0 {
@@ -99,7 +99,7 @@ func runInstall(args []string) {
 }
 
 func runUninstall() {
-	if os.Geteuid() != 0 {
+	if !isElevated() {
 		fatalf("uninstall must run as root/administrator")
 	}
 
@@ -132,7 +132,7 @@ func runRestoreCLI() {
 	if err != nil {
 		fatalf("%v", err)
 	}
-	if os.Geteuid() != 0 {
+	if !isElevated() {
 		fatalf("restore must run as root/administrator")
 	}
 	response, err := restoreDirect(cfg)
