@@ -128,17 +128,21 @@ jobs:
             Where-Object { $_.Name -notmatch "ffmpeg|chrome_crashpad" } |
             Select-Object -First 1
           if (-not $exe) { throw "No packaged executable found" }
-          & $exe.FullName --smoke-test
-          if ($LASTEXITCODE -ne 0) { throw "Smoke test failed" }
+          $process = Start-Process -FilePath $exe.FullName `
+            -ArgumentList "--smoke-test" -NoNewWindow -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "Smoke test failed with exit code $($process.ExitCode)"
+          }
 
       - name: Smoke test Linux package
         if: runner.os == 'Linux'
         run: |
-          executable=$(find release/linux-unpacked -maxdepth 1 -type f -perm -111 | head -n 1)
+          executable=$(find release/linux-unpacked -maxdepth 1 -type f -perm -111 -iname 'shieldbar' | head -n 1)
           if [ -z "$executable" ]; then
-            echo "No packaged executable found" >&2
+            echo "No packaged ShieldBar executable found" >&2
             exit 1
           fi
+          echo "Smoke-testing $executable"
           xvfb-run -a "$executable" --smoke-test --no-sandbox
 
       - name: Upload artifacts

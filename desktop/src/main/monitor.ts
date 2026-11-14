@@ -236,7 +236,9 @@ export class Monitor {
     this.lastNetworkAvailable = available
 
     if (!available) {
-      if (!this.isChecking) {
+      // Only react to the transition. Rescheduling on every poll would keep
+      // pushing the offline retry timer forward and it would never fire.
+      if (!this.isChecking && this.status !== 'offline') {
         this.setOffline('No network connection. ShieldBar will retry automatically.')
         this.scheduleNext()
         this.emit()

@@ -164,6 +164,8 @@ No code-signing secrets are used.
 - The installer is per-user and does not require administrator rights.
 - Unsigned, so SmartScreen warns on first launch.
 - Notifications require Windows notification settings to allow ShieldBar.
+  Toast notifications are associated with the installer's Start Menu shortcut;
+  the portable zip may not show them unless a shortcut is created manually.
 
 ### Linux
 
