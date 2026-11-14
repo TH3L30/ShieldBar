@@ -71,6 +71,12 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
                     self?.onOpenFullReport?()
                 }
             },
+            openProtection: { [weak self] in
+                self?.onOpenProtection?()
+            },
+            restoreNetwork: { [weak self] in
+                self?.onRestoreNetwork?()
+            },
             quit: {
                 NSApp.terminate(nil)
             },
@@ -82,7 +88,7 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
             }
         )
 
-        let view = DashboardView(monitor: monitor, actions: actions)
+        let view = DashboardView(monitor: monitor, protection: protection, actions: actions)
         let hosting = NSHostingController(rootView: view)
         hosting.sizingOptions = [.preferredContentSize]
         hostingController = hosting
@@ -267,6 +273,8 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
 
 struct DashboardActions {
     var openFullReport: () -> Void
+    var openProtection: () -> Void
+    var restoreNetwork: () -> Void
     var quit: () -> Void
     var showAbout: () -> Void
     var openBrowserLeaks: () -> Void

@@ -155,4 +155,4 @@ None of this local information is transmitted.
 
 ## Changes
 
-If a future version adds persistence, telemetry, or a new network destination, this document and the app's behavior must be updated together. The current v1.1.0 build does not include any such feature.
+If a future version adds persistence, telemetry, or a new network destination, this document and the app's behavior must be updated together. The current v1.1.1 build does not include any such feature.

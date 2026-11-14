@@ -109,10 +109,10 @@ npm run dist:linux  # AppImage + .deb (x64)
 
 Artifacts are written to `desktop/release/`:
 
-- `ShieldBar-1.1.0-win-x64.exe` — per-user NSIS installer
-- `ShieldBar-1.1.0-win-x64.zip` — portable zip
-- `ShieldBar-1.1.0-linux-x86_64.AppImage`
-- `ShieldBar-1.1.0-linux-amd64.deb`
+- `ShieldBar-1.1.1-win-x64.exe` — per-user NSIS installer
+- `ShieldBar-1.1.1-win-x64.zip` — portable zip
+- `ShieldBar-1.1.1-linux-x86_64.AppImage`
+- `ShieldBar-1.1.1-linux-amd64.deb`
 
 Builds are unsigned. Windows SmartScreen warns about an unknown publisher; Linux packages are unsigned too. There is no auto-updater.
 

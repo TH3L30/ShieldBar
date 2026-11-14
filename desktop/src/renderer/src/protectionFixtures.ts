@@ -13,7 +13,7 @@ export function previewProtectionState(triggered = false): ProtectionState {
     lastTrigger: triggered ? 'publicLeak' : null,
     baselineLabel: triggered ? null : 'Canada · Ontario · Toronto',
     helperInstalled: true,
-    helperVersion: '1.1.0',
+    helperVersion: '1.1.1',
     settings: {
       ...DEFAULT_PROTECTION_SETTINGS,
       enabled: true,

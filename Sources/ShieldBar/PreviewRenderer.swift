@@ -16,9 +16,14 @@ enum PreviewRenderer {
 
         let actions = DashboardActions(
             openFullReport: {},
+            openProtection: {},
+            restoreNetwork: {},
             quit: {},
             showAbout: {},
             openBrowserLeaks: {}
+        )
+        let previewProtection = ProtectionController(
+            previewState: protectionPreviewState(triggered: false)
         )
 
         let previews: [(String, Monitor)] = [
@@ -33,7 +38,11 @@ enum PreviewRenderer {
         ]
 
         for (name, monitor) in previews {
-            let view = DashboardView(monitor: monitor, actions: actions)
+            let view = DashboardView(
+                monitor: monitor,
+                protection: previewProtection,
+                actions: actions
+            )
             let renderer = ImageRenderer(content: view)
             renderer.scale = 2
             renderer.proposedSize = ProposedViewSize(width: 386, height: nil)
@@ -187,7 +196,7 @@ enum PreviewRenderer {
         var state = ProtectionViewState()
         state.phase = triggered ? .triggered : .ready
         state.helperInstalled = true
-        state.helperVersion = "1.1.0"
+        state.helperVersion = "1.1.1"
         state.settings = ProtectionSettings(
             enabled: true,
             killOnPublicLeak: true,

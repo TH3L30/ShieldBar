@@ -13,7 +13,7 @@
   <img alt="macOS arm64" src="https://img.shields.io/badge/macOS-arm64-111111?logo=apple&logoColor=white">
   <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white">
   <img alt="Linux x64" src="https://img.shields.io/badge/Linux-x64-FCC624?logo=linux&logoColor=black">
-  <img alt="Version 1.1.0" src="https://img.shields.io/badge/version-1.1.0-2ea44f">
+  <img alt="Version 1.1.1" src="https://img.shields.io/badge/version-1.1.1-2ea44f">
   <img alt="Protection Beta" src="https://img.shields.io/badge/Protection-Beta-orange">
 </p>
 
@@ -29,13 +29,13 @@
 
 ## Download
 
-[**ShieldBar v1.1.0**](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [SHA256SUMS.txt](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0)
+[**ShieldBar v1.1.1**](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.1) · [SHA256SUMS.txt](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.1)
 
 | Platform | Requires | Asset |
 | --- | --- | --- |
-| macOS | macOS 13+, Apple silicon | [`ShieldBar-1.1.0-macos-arm64.zip`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0)* |
-| Windows | Windows 10/11, x64 | [`ShieldBar-1.1.0-win-x64.exe`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [`ShieldBar-1.1.0-win-x64.zip`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) |
-| Linux | x64, glibc-based distro | [`ShieldBar-1.1.0-linux-x86_64.AppImage`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [`ShieldBar-1.1.0-linux-amd64.deb`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) |
+| macOS | macOS 13+, Apple silicon | [`ShieldBar-1.1.1-macos-arm64.zip`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.1)* |
+| Windows | Windows 10/11, x64 | [`ShieldBar-1.1.1-win-x64.exe`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.1) · [`ShieldBar-1.1.1-win-x64.zip`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.1) |
+| Linux | x64, glibc-based distro | [`ShieldBar-1.1.1-linux-x86_64.AppImage`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.1) · [`ShieldBar-1.1.1-linux-amd64.deb`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.1) |
 
 <sub>* The macOS build is arm64, ad-hoc signed, and not notarized. Windows and Linux builds are unsigned. Verify downloads against `SHA256SUMS.txt`. There is no auto-update.</sub>
 
@@ -96,7 +96,7 @@ See [docs/PRIVACY.md](docs/PRIVACY.md) for the full data-handling details.
 
 - **macOS:** unzip, move `ShieldBar.app` to Applications, then Control-click → **Open** the first time. Requires Apple silicon.
 - **Windows:** run the `.exe` installer, or unpack the portable `.zip`. SmartScreen will warn because the build is unsigned.
-- **Linux:** `chmod +x` the AppImage and run it, or install the `.deb` with `sudo apt install ./ShieldBar-1.1.0-linux-amd64.deb`.
+- **Linux:** `chmod +x` the AppImage and run it, or install the `.deb` with `sudo apt install ./ShieldBar-1.1.1-linux-amd64.deb`.
 
 ShieldBar lives in the **menu bar** on macOS and the **system tray** on Windows and Linux. It keeps running when windows close; use **Quit ShieldBar** to exit. Protection requires ShieldBar to stay running.
 

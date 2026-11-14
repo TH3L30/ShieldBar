@@ -24,7 +24,7 @@ Try these in order:
    ShieldBar.exe --restore-network
 
    # Linux AppImage; use the installed shieldbar binary for a .deb
-   ./ShieldBar-1.1.0-linux-x86_64.AppImage --restore-network
+   ./ShieldBar-1.1.1-linux-x86_64.AppImage --restore-network
    ```
 
 4. Helper command line, with administrator/root privileges:
@@ -162,14 +162,14 @@ Closing the popover or report window does not quit the app. Use **Quit ShieldBar
 The AppImage requires FUSE.
 
 ```sh
-chmod +x ShieldBar-1.1.0-linux-x86_64.AppImage
-./ShieldBar-1.1.0-linux-x86_64.AppImage
+chmod +x ShieldBar-1.1.1-linux-x86_64.AppImage
+./ShieldBar-1.1.1-linux-x86_64.AppImage
 ```
 
 If FUSE is unavailable:
 
 ```sh
-./ShieldBar-1.1.0-linux-x86_64.AppImage --appimage-extract-and-run
+./ShieldBar-1.1.1-linux-x86_64.AppImage --appimage-extract-and-run
 ```
 
 Installing your distribution's FUSE 2 compatibility package is the permanent fix. The `.deb` does not need FUSE.
@@ -187,7 +187,7 @@ The Windows build is unsigned, so SmartScreen warns about an unknown publisher.
 3. Verify the download against `SHA256SUMS.txt`:
 
    ```powershell
-   Get-FileHash .\ShieldBar-1.1.0-win-x64.exe -Algorithm SHA256
+   Get-FileHash .\ShieldBar-1.1.1-win-x64.exe -Algorithm SHA256
    ```
 
 There is no code-signing certificate and no auto-update.

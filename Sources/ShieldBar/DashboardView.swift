@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 struct DashboardView: View {
     @ObservedObject var monitor: Monitor
+    @ObservedObject var protection: ProtectionController
     let actions: DashboardActions
 
     @State private var copiedIP = false
@@ -16,6 +17,7 @@ struct DashboardView: View {
             if monitor.showWelcome {
                 welcomeCard
             }
+            protectionCard
             ipCard
             webRTCard
             freshness
@@ -79,6 +81,84 @@ struct DashboardView: View {
         .background(
             RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(Color.accentColor.opacity(0.09))
+        )
+    }
+
+    private var protectionCard: some View {
+        let state = protection.viewState
+        let triggered = state.triggered
+        let armed = state.armed
+        let failed = state.phase == .error
+
+        let title: String
+        let detail: String
+        if triggered {
+            title = "Protection triggered"
+            detail = "Networking is disabled. Restore manually when ready."
+        } else if armed {
+            title = "Protection armed"
+            detail = state.baselineLabel.map { "Monitoring · \($0)" }
+                ?? "Monitoring every 15 seconds."
+        } else if failed {
+            title = "Protection error"
+            detail = state.message ?? "Open Protection for details."
+        } else if state.helperInstalled {
+            title = "Protection off"
+            detail = "Kill switch available but not armed."
+        } else {
+            title = "Protection not set up"
+            detail = "Install the helper to enable the kill switch."
+        }
+
+        let tint: Color = triggered ? .red : armed ? .green : failed ? .orange : .secondary
+
+        return HStack(alignment: .top, spacing: 9) {
+            Image(systemName: triggered ? "wifi.slash" : "lock.shield.fill")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(tint)
+                .frame(width: 16, height: 16)
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 5) {
+                    Text(title)
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("BETA")
+                        .font(.system(size: 7, weight: .bold))
+                        .tracking(0.4)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(Color.orange.opacity(0.14))
+                        .foregroundColor(.orange)
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                }
+                Text(detail)
+                    .font(.system(size: 9.5))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+
+            if triggered {
+                Button("Restore") {
+                    actions.restoreNetwork()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+                .controlSize(.small)
+                .font(.system(size: 10))
+            } else {
+                Button(state.helperInstalled ? "Manage" : "Set up") {
+                    actions.openProtection()
+                }
+                .controlSize(.small)
+                .font(.system(size: 10))
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(tint.opacity(triggered || armed || failed ? 0.09 : 0.05))
         )
     }
 
@@ -283,10 +363,13 @@ struct DashboardView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: 10) {
+                    Button("Protection…") {
+                        actions.openProtection()
+                    }
+                    Spacer(minLength: 0)
                     Button("About ShieldBar") {
                         actions.showAbout()
                     }
-                    Spacer(minLength: 0)
                     Button("Quit ShieldBar") {
                         actions.quit()
                     }

@@ -172,10 +172,10 @@ Artifacts are written to `desktop/release/`:
 
 | Asset | Format |
 | --- | --- |
-| `ShieldBar-1.1.0-win-x64.exe` | Per-user NSIS installer |
-| `ShieldBar-1.1.0-win-x64.zip` | Portable zip |
-| `ShieldBar-1.1.0-linux-x86_64.AppImage` | AppImage |
-| `ShieldBar-1.1.0-linux-amd64.deb` | Debian package |
+| `ShieldBar-1.1.1-win-x64.exe` | Per-user NSIS installer |
+| `ShieldBar-1.1.1-win-x64.zip` | Portable zip |
+| `ShieldBar-1.1.1-linux-x86_64.AppImage` | AppImage |
+| `ShieldBar-1.1.1-linux-amd64.deb` | Debian package |
 
 The version comes from `desktop/package.json`. Packaging is unsigned and uses `CSC_IDENTITY_AUTO_DISCOVERY=false` in CI. There is no auto-updater.
 
@@ -221,9 +221,9 @@ No code-signing secrets are used. Windows and Linux artifacts are unsigned; the 
    - the README badges, download table, and asset names
 2. Run the native and Electron test suites, plus both self-tests on a machine with working network access.
 3. Build the macOS app locally and create its zip (`Scripts/build-app.sh` writes `ShieldBar.app.zip`). Run `Scripts/self-test.sh` against the installed bundle.
-4. Commit the version bump and tag it, for example `v1.1.0`.
+4. Commit the version bump and tag it, for example `v1.1.1`.
 5. Let CI create the draft release with the Windows and Linux assets and `SHA256SUMS.txt`.
-6. Attach the macOS arm64 zip manually as `ShieldBar-1.1.0-macos-arm64.zip`. Because CI generated the checksum file before the macOS asset existed, add the macOS checksum and upload the updated `SHA256SUMS.txt`.
+6. Attach the macOS arm64 zip manually as `ShieldBar-1.1.1-macos-arm64.zip`. Because CI generated the checksum file before the macOS asset existed, add the macOS checksum and upload the updated `SHA256SUMS.txt`.
 7. Smoke-test the installers on clean Windows, Linux, and macOS machines or VMs.
 8. Publish the draft.
 

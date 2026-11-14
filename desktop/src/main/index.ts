@@ -412,7 +412,7 @@ async function runSmokeTest(): Promise<number> {
     lastTrigger: null,
     baselineLabel: 'Canada',
     helperInstalled: true,
-    helperVersion: '1.1.0',
+    helperVersion: '1.1.1',
     settings: { ...DEFAULT_PROTECTION_SETTINGS, enabled: true },
     baseline: {
       label: 'Canada',
