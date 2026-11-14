@@ -40,7 +40,7 @@ Screenshots use documentation-only IP ranges and contain no real data.
 
 ## What it shows
 
-Click the shield in the menu bar to open the summary card:
+Click the shield in the menu bar or system tray to open the summary card:
 
 - **Public IP** reported by BrowserLeaks, with copy button
 - **Location** (country/city, flag when available) and **ISP**
@@ -50,11 +50,11 @@ Click the shield in the menu bar to open the summary card:
 
 **Full Report** opens the live BrowserLeaks page in a separate window inside
 the app. Navigation there is restricted to `browserleaks.com`; external links
-open in the default browser. **Open in Safari** is available from that window's
-toolbar.
+open in the default browser. On macOS, **Open in Safari** is available from that
+window's toolbar.
 
-Right-click the menu-bar icon for Refresh, Full Report, notification settings,
-About, and Quit.
+Right-click the tray/menu-bar icon for Refresh, Full Report, notification
+settings, About, and Quit.
 
 ## Status rules
 
