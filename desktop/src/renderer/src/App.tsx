@@ -154,6 +154,44 @@ export function App() {
         </div>
       </header>
 
+      {state.protection?.triggered && (
+        <section className="protection-alert" aria-label="Protection triggered">
+          <div>
+            <strong>Network disabled by ShieldBar</strong>
+            <span>
+              {state.protection.lastTrigger
+                ? `Triggered by ${state.protection.lastTrigger.replace(/([A-Z])/g, ' $1').toLowerCase()}.`
+                : 'Protection stopped your connection.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="button danger"
+            onClick={() => void window.shieldbar.restoreNetwork()}
+          >
+            Restore Network
+          </button>
+        </section>
+      )}
+
+      {state.protection?.armed && !state.protection.triggered && (
+        <button
+          type="button"
+          className="protection-strip"
+          onClick={() => window.shieldbar.openProtection()}
+          title="Open protection settings"
+        >
+          <span className="armed-dot" aria-hidden="true" />
+          <span>
+            Protection armed
+            {state.protection.baselineLabel
+              ? ` · ${state.protection.baselineLabel}`
+              : ''}
+          </span>
+          <span className="strip-arrow">›</span>
+        </button>
+      )}
+
       {state.showWelcome && (
         <section className="welcome" aria-label="Welcome">
           <TrayIcon />
@@ -349,6 +387,13 @@ export function App() {
           </p>
 
           <div className="settings-actions">
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => window.shieldbar.openProtection()}
+            >
+              Protection…
+            </button>
             <button
               type="button"
               className="link-button"

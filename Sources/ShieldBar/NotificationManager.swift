@@ -1,4 +1,5 @@
 import Foundation
+import ShieldBarCore
 import UserNotifications
 
 final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
@@ -37,6 +38,22 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
 
         let request = UNNotificationRequest(
             identifier: "shieldbar.public-leak.\(Int(Date().timeIntervalSince1970))",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    func notifyProtectionTriggered(_ trigger: ProtectionTrigger) {
+        guard isRunningInAppBundle else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "ShieldBar disabled networking"
+        content.body = "Protection triggered by \(trigger.label). Open ShieldBar to restore your connection."
+        content.sound = .default
+        content.threadIdentifier = "shieldbar-protection-triggered"
+
+        let request = UNNotificationRequest(
+            identifier: "shieldbar.protection.\(Int(Date().timeIntervalSince1970))",
             content: content,
             trigger: nil
         )

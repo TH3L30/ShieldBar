@@ -46,6 +46,7 @@ export class Monitor {
   private lastError: string | null = null
   private showWelcome: boolean
   private popoverOpen = false
+  private protectionArmed = false
 
   private timer: NodeJS.Timeout | null = null
   private networkTimer: NodeJS.Timeout | null = null
@@ -140,6 +141,17 @@ export class Monitor {
     const previousStatus = this.lastKnownStatus
 
     void this.runProbe(previousStatus)
+  }
+
+  setProtectionArmed(armed: boolean): void {
+    if (this.protectionArmed === armed) return
+    this.protectionArmed = armed
+    if (this.hasStarted && !this.stopped) this.scheduleNext()
+    this.emit()
+  }
+
+  isProtectionArmed(): boolean {
+    return this.protectionArmed
   }
 
   setPopoverOpen(open: boolean): void {
@@ -270,7 +282,8 @@ export class Monitor {
     const interval = checkIntervalMs({
       status: this.status,
       isNetworkAvailable: this.isNetworkAvailable(),
-      popoverOpen: this.popoverOpen
+      popoverOpen: this.popoverOpen,
+      protectionArmed: this.protectionArmed
     })
 
     this.nextCheckAt = Date.now() + interval

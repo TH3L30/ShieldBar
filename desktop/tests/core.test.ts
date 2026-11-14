@@ -263,4 +263,26 @@ describe('checkIntervalMs', () => {
       })
     ).toBe(900_000)
   })
+
+  it('uses 15 seconds while protection is armed', () => {
+    expect(
+      checkIntervalMs({
+        status: 'clear',
+        isNetworkAvailable: true,
+        popoverOpen: false,
+        protectionArmed: true
+      })
+    ).toBe(15_000)
+  })
+
+  it('still uses 60 seconds while offline and armed', () => {
+    expect(
+      checkIntervalMs({
+        status: 'offline',
+        isNetworkAvailable: true,
+        popoverOpen: true,
+        protectionArmed: true
+      })
+    ).toBe(60_000)
+  })
 })

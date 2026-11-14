@@ -5,21 +5,26 @@ import SwiftUI
 @MainActor
 final class StatusBarController: NSObject, NSPopoverDelegate {
     var onOpenFullReport: (() -> Void)?
+    var onOpenProtection: (() -> Void)?
+    var onRestoreNetwork: (() -> Void)?
 
     private let monitor: Monitor
+    private let protection: ProtectionController
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
     private var hostingController: NSHostingController<DashboardView>?
     private var cancellables = Set<AnyCancellable>()
     private var lastPopoverClose: Date?
 
-    init(monitor: Monitor) {
+    init(monitor: Monitor, protection: ProtectionController) {
         self.monitor = monitor
+        self.protection = protection
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
         configureStatusItem()
         configurePopover()
         observeMonitor()
+        observeProtection()
     }
 
     func showPopover() {
@@ -95,11 +100,41 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
             .store(in: &cancellables)
     }
 
+    private func observeProtection() {
+        protection.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.refreshStatusItem()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    func refreshProtection() {
+        refreshStatusItem()
+    }
+
     private func refreshStatusItem() {
         guard let button = statusItem.button else { return }
+        let triggered = protection.viewState.triggered
+        let armed = protection.viewState.armed
+
+        if triggered {
+            button.image = MenuBarIcon.image(for: .publicLeak)
+            button.toolTip = "ShieldBar — NETWORK DISABLED by protection. Restore from the menu."
+            button.setAccessibilityLabel("ShieldBar: network disabled")
+            button.setAccessibilityHelp("Protection triggered and disabled networking. Restore from the menu.")
+            return
+        }
+
         button.image = MenuBarIcon.image(for: monitor.status)
-        button.toolTip = monitor.menuBarTooltip
-        button.setAccessibilityLabel("ShieldBar: \(monitor.status.shortLabel)")
+        var tooltip = monitor.menuBarTooltip
+        if armed {
+            tooltip += " · Protection armed"
+        }
+        button.toolTip = tooltip
+        button.setAccessibilityLabel("ShieldBar: \(monitor.status.shortLabel)\(armed ? ", protection armed" : "")")
         button.setAccessibilityHelp(monitor.status.accessibilityDescription)
     }
 
@@ -123,6 +158,16 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
         }
 
         let menu = NSMenu()
+
+        if protection.viewState.triggered {
+            menu.addItem(
+                withTitle: "Restore Network",
+                action: #selector(restoreNetwork),
+                keyEquivalent: ""
+            ).target = self
+            menu.addItem(.separator())
+        }
+
         menu.addItem(
             withTitle: monitor.isChecking ? "Checking…" : "Refresh Now",
             action: #selector(refreshNow),
@@ -135,6 +180,20 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
             keyEquivalent: ""
         ).target = self
         menu.addItem(.separator())
+
+        let protectionTitle: String
+        if protection.viewState.triggered {
+            protectionTitle = "Protection (Network Disabled)…"
+        } else if protection.viewState.armed {
+            protectionTitle = "Protection (Armed)…"
+        } else {
+            protectionTitle = "Protection…"
+        }
+        menu.addItem(
+            withTitle: protectionTitle,
+            action: #selector(openProtection),
+            keyEquivalent: ""
+        ).target = self
 
         let notifyItem = NSMenuItem(
             title: "Notify on Public Leaks",
@@ -168,6 +227,14 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
 
     @objc private func openFullReport() {
         onOpenFullReport?()
+    }
+
+    @objc private func openProtection() {
+        onOpenProtection?()
+    }
+
+    @objc private func restoreNetwork() {
+        onRestoreNetwork?()
     }
 
     @objc private func toggleNotifications() {

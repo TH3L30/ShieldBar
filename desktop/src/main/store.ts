@@ -7,20 +7,27 @@ import {
   writeFileSync
 } from 'node:fs'
 import { dirname, join } from 'node:path'
+import {
+  DEFAULT_PROTECTION_SETTINGS,
+  type ProtectionSettings
+} from '../shared/protection'
+import { normalizeSettings } from '../core/protection'
 
 interface SettingsData {
   notifyOnLeak: boolean
   hasSeenWelcome: boolean
+  protection: ProtectionSettings
 }
 
 const DEFAULTS: SettingsData = {
   notifyOnLeak: true,
-  hasSeenWelcome: false
+  hasSeenWelcome: false,
+  protection: { ...DEFAULT_PROTECTION_SETTINGS }
 }
 
 /**
- * Tiny local settings file. It deliberately stores only two booleans: no IP
- * addresses, reports, history, or timestamps.
+ * Small local settings file. It stores UI preferences and protection toggles,
+ * never IP addresses, baselines, reports, or history.
  */
 export class SettingsStore {
   private readonly filePath: string
@@ -38,6 +45,15 @@ export class SettingsStore {
 
   get hasSeenWelcome(): boolean {
     return this.data.hasSeenWelcome
+  }
+
+  get protectionSettings(): ProtectionSettings {
+    return { ...this.data.protection }
+  }
+
+  setProtectionSettings(settings: ProtectionSettings): void {
+    this.data = { ...this.data, protection: { ...settings } }
+    this.save()
   }
 
   setNotifyOnLeak(value: boolean): void {
@@ -65,10 +81,17 @@ export class SettingsStore {
         hasSeenWelcome:
           typeof parsed.hasSeenWelcome === 'boolean'
             ? parsed.hasSeenWelcome
-            : DEFAULTS.hasSeenWelcome
+            : DEFAULTS.hasSeenWelcome,
+        protection: normalizeSettings(
+          parsed.protection,
+          DEFAULT_PROTECTION_SETTINGS
+        )
       }
     } catch {
-      return { ...DEFAULTS }
+      return {
+        ...DEFAULTS,
+        protection: { ...DEFAULT_PROTECTION_SETTINGS }
+      }
     }
   }
 

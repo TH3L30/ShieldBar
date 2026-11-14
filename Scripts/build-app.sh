@@ -65,18 +65,25 @@ if [[ ! -f "$ROOT/Resources/AppIcon.icns" || "${FORCE_ICON:-0}" == "1" ]]; then
     iconutil -c icns "$ICONSET" -o "$ROOT/Resources/AppIcon.icns"
 fi
 
+echo "==> Building privileged helper"
+"$ROOT/helper/build.sh"
+
 echo "==> Assembling $DEST"
 rm -rf "$DEST"
-mkdir -p "$DEST/Contents/MacOS" "$DEST/Contents/Resources"
+mkdir -p "$DEST/Contents/MacOS" "$DEST/Contents/Resources/helper"
 install -m 755 "$BIN_DIR/$APP_NAME" "$DEST/Contents/MacOS/$APP_NAME"
 cp "$ROOT/Resources/Info.plist" "$DEST/Contents/Info.plist"
 cp "$ROOT/Resources/AppIcon.icns" "$DEST/Contents/Resources/AppIcon.icns"
 cp "$ROOT/Resources/Attribution.txt" "$DEST/Contents/Resources/Attribution.txt"
+install -m 755 \
+    "$ROOT/desktop/resources/helper/darwin-arm64/shieldbar-helper" \
+    "$DEST/Contents/Resources/helper/shieldbar-helper"
 printf 'APPL????' > "$DEST/Contents/PkgInfo"
 
 plutil -lint "$DEST/Contents/Info.plist"
 
 echo "==> Signing (ad hoc)"
+codesign --force --sign - "$DEST/Contents/Resources/helper/shieldbar-helper"
 codesign --force --sign - --identifier "com.local.shieldbar" "$DEST"
 codesign --verify --deep --strict "$DEST"
 

@@ -1,4 +1,8 @@
 import { Notification } from 'electron'
+import {
+  protectionTriggerLabel,
+  type ProtectionTrigger
+} from '../shared/protection'
 
 /**
  * Leak-only notifications. The body never contains an IP address, and nothing
@@ -32,6 +36,29 @@ export class NotificationController {
       this.active.delete(notification)
     }
 
+    notification.on('click', () => {
+      forget()
+      this.onClick()
+    })
+    notification.on('close', forget)
+    notification.on('failed', forget)
+    notification.show()
+  }
+
+  notifyProtectionTriggered(trigger: ProtectionTrigger): void {
+    if (!Notification.isSupported()) return
+
+    const notification = new Notification({
+      title: 'ShieldBar disabled networking',
+      body: `Protection triggered by ${protectionTriggerLabel(trigger)}. Open ShieldBar to restore your connection.`,
+      silent: false,
+      timeoutType: 'never'
+    })
+
+    this.active.add(notification)
+    const forget = (): void => {
+      this.active.delete(notification)
+    }
     notification.on('click', () => {
       forget()
       this.onClick()

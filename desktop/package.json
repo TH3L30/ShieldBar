@@ -1,6 +1,6 @@
 {
   "name": "shieldbar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Public IP and WebRTC leak monitor for the Windows and Linux system tray",
   "author": "TH3L30 <its.mani.brz@gmail.com>",
@@ -21,6 +21,7 @@
     "smoke": "npm run build && electron . --smoke-test",
     "preview": "npm run build && electron . --render-preview",
     "icons": "node scripts/generate-icons.mjs",
+    "helper": "node scripts/build-helper.mjs",
     "dist:win": "npm run build && electron-builder --win nsis zip --x64 --publish never",
     "dist:linux": "npm run build && electron-builder --linux AppImage deb --x64 --publish never"
   },

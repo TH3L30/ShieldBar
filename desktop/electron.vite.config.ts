@@ -24,7 +24,10 @@ export default defineConfig({
     plugins: [react()],
     build: {
       rollupOptions: {
-        input: resolve(__dirname, 'src/renderer/index.html')
+        input: {
+          dashboard: resolve(__dirname, 'src/renderer/index.html'),
+          protection: resolve(__dirname, 'src/renderer/protection.html')
+        }
       }
     }
   }

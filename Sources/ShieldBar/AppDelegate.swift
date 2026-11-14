@@ -1,16 +1,24 @@
 import AppKit
+import Darwin
 import Foundation
 import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var monitor = Monitor()
+    private lazy var protection = ProtectionController(monitor: monitor)
     private var statusBarController: StatusBarController?
     private var fullReportController: FullReportWindowController?
+    private var protectionWindowController: ProtectionWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         buildMainMenu()
+
+        if CommandLine.arguments.contains("--restore-network") {
+            restoreNetworkFromCLI()
+            return
+        }
 
         if CommandLine.arguments.contains("--self-test") {
             SelfTest.run()
@@ -28,16 +36,113 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let statusBar = StatusBarController(monitor: monitor)
+        let statusBar = StatusBarController(
+            monitor: monitor,
+            protection: protection
+        )
         statusBar.onOpenFullReport = { [weak self] in
             self?.openFullReport()
         }
+        statusBar.onOpenProtection = { [weak self] in
+            self?.openProtection()
+        }
+        statusBar.onRestoreNetwork = { [weak self] in
+            self?.restoreNetworkFromUI()
+        }
         statusBarController = statusBar
-        monitor.start()
 
-        if monitor.showWelcome {
+        monitor.onNotificationTap = { [weak self] in
+            guard let self else { return }
+            if self.protection.isTriggered {
+                self.openProtection()
+            } else {
+                self.statusBarController?.showPopover()
+            }
+        }
+
+        monitor.start()
+        protection.start()
+
+        if monitor.showWelcome, !protection.isTriggered {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak statusBar] in
                 statusBar?.showPopover()
+            }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            guard let self, self.protection.isTriggered else { return }
+            self.openProtection()
+        }
+
+        if CommandLine.arguments.contains("--open-protection") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                self?.openProtection()
+            }
+        }
+    }
+
+    func applicationShouldTerminate(
+        _ sender: NSApplication
+    ) -> NSApplication.TerminateReply {
+        if protection.isTriggered {
+            let alert = NSAlert()
+            alert.alertStyle = .critical
+            alert.messageText = "Your network is still disabled"
+            alert.informativeText = "Quitting ShieldBar will leave networking disabled until you restore it from the helper or your operating system."
+            alert.addButton(withTitle: "Keep ShieldBar Running")
+            alert.addButton(withTitle: "Quit")
+            return alert.runModal() == .alertFirstButtonReturn ? .terminateCancel : .terminateNow
+        }
+
+        if protection.isArmed {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "Kill switch is armed"
+            alert.informativeText = "Quitting stops monitoring and disarms the kill switch."
+            alert.addButton(withTitle: "Keep ShieldBar Running")
+            alert.addButton(withTitle: "Quit and Disarm")
+            if alert.runModal() == .alertFirstButtonReturn {
+                return .terminateCancel
+            }
+            _ = protection.disarm()
+        }
+
+        return .terminateNow
+    }
+
+    private func openProtection() {
+        if protectionWindowController == nil {
+            protectionWindowController = ProtectionWindowController(controller: protection)
+        }
+        protectionWindowController?.present()
+    }
+
+    private func restoreNetworkFromUI() {
+        Task {
+            let result = await protection.restoreNetwork()
+            if !result.ok {
+                let alert = NSAlert()
+                alert.alertStyle = .critical
+                alert.messageText = "Could not restore networking"
+                alert.informativeText = result.message
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
+        }
+    }
+
+    private func restoreNetworkFromCLI() {
+        Task {
+            do {
+                let response = try await HelperClient().restore()
+                let message = response.message ?? (response.ok ? "Networking restored." : "Restore failed.")
+                print(message)
+                exit(response.ok ? 0 : 1)
+            } catch {
+                FileHandle.standardError.write(
+                    Data("FAIL: \(error.localizedDescription)\n".utf8)
+                )
+                exit(1)
             }
         }
     }

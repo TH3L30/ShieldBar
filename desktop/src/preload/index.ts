@@ -1,5 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC_CHANNELS, type ShieldBarAPI, type ShieldState } from '../shared/ipc'
+import {
+  IPC_CHANNELS,
+  type ShieldBarAPI,
+  type ShieldState
+} from '../shared/ipc'
+import type {
+  ProtectionActionResult,
+  ProtectionSettings,
+  ProtectionState
+} from '../shared/protection'
 
 const api: ShieldBarAPI = {
   getState: () => ipcRenderer.invoke(IPC_CHANNELS.getState) as Promise<ShieldState>,
@@ -22,6 +31,42 @@ const api: ShieldBarAPI = {
     }
     ipcRenderer.on(IPC_CHANNELS.state, listener)
     return () => ipcRenderer.removeListener(IPC_CHANNELS.state, listener)
+  },
+
+  getProtectionState: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.getProtectionState) as Promise<ProtectionState>,
+  installHelper: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.installHelper) as Promise<ProtectionActionResult>,
+  uninstallHelper: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.uninstallHelper) as Promise<ProtectionActionResult>,
+  setProtectionBaseline: () =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.setProtectionBaseline
+    ) as Promise<ProtectionActionResult>,
+  armProtection: (options) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.armProtection,
+      options
+    ) as Promise<ProtectionActionResult>,
+  disarmProtection: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.disarmProtection) as Promise<ProtectionActionResult>,
+  restoreNetwork: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.restoreNetwork) as Promise<ProtectionActionResult>,
+  updateProtectionSettings: (patch: Partial<ProtectionSettings>) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.updateProtectionSettings,
+      patch
+    ) as Promise<ProtectionSettings>,
+  openProtection: () => ipcRenderer.send(IPC_CHANNELS.openProtection),
+  onProtectionState: (callback) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      state: ProtectionState
+    ): void => {
+      callback(state)
+    }
+    ipcRenderer.on(IPC_CHANNELS.protectionState, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.protectionState, listener)
   }
 }
 

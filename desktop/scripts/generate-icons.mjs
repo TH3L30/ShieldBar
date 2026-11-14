@@ -27,7 +27,9 @@ const STATUSES = [
   'localExposure',
   'publicLeak',
   'inconclusive',
-  'offline'
+  'offline',
+  'armed',
+  'killed'
 ]
 
 const COLORS = {
@@ -37,7 +39,9 @@ const COLORS = {
   localExposure: '#ff9e0a',
   publicLeak: '#ff453b',
   inconclusive: '#f7b500',
-  offline: '#8f8f96'
+  offline: '#8f8f96',
+  armed: '#0a85ff',
+  killed: '#b91c1c'
 }
 
 const SHIELD_PATH =
@@ -65,6 +69,10 @@ function glyph(status) {
       return `<circle cx="6.56" cy="8.3" r="0.85" fill="${white}"/><circle cx="9" cy="8.3" r="0.85" fill="${white}"/><circle cx="11.44" cy="8.3" r="0.85" fill="${white}"/>`
     case 'idle':
       return `<circle cx="9" cy="9.1" r="1" fill="${white}"/>`
+    case 'armed':
+      return `<rect x="6.2" y="8.5" width="5.6" height="4.7" rx="0.9" fill="${white}"/><path d="M7.35 8.5 V7.15 C7.35 5.75 8.05 4.95 9 4.95 C9.95 4.95 10.65 5.75 10.65 7.15 V8.5" fill="none" stroke="${white}" stroke-width="1.15" stroke-linecap="round"/>`
+    case 'killed':
+      return `<path d="M6.1 9.1 L11.9 9.1" fill="none" stroke="${white}" stroke-width="2.1" stroke-linecap="round"/>`
     default:
       return ''
   }

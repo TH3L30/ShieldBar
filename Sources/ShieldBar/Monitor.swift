@@ -43,6 +43,7 @@ final class Monitor: ObservableObject {
     private var pendingCheck = false
     private var hasStarted = false
     private var popoverOpen = false
+    private var protectionArmed = false
     private var lastPathSatisfied: Bool?
     private var lastKnownStatus: ShieldStatus?
     private var wakeObserver: NSObjectProtocol?
@@ -152,6 +153,24 @@ final class Monitor: ObservableObject {
         }
     }
 
+    func setProtectionArmed(_ armed: Bool) {
+        guard protectionArmed != armed else { return }
+        protectionArmed = armed
+        scheduleNext()
+    }
+
+    var isProtectionArmed: Bool {
+        protectionArmed
+    }
+
+    func notifyProtectionTriggered(_ trigger: ProtectionTrigger) {
+        notifications.notifyProtectionTriggered(trigger)
+    }
+
+    func requestNotificationAuthorization() {
+        notifications.requestAuthorizationIfNeeded()
+    }
+
     func setPopoverOpen(_ open: Bool) {
         popoverOpen = open
 
@@ -209,6 +228,8 @@ final class Monitor: ObservableObject {
         let interval: TimeInterval
         if !isNetworkAvailable || status == .offline {
             interval = 60
+        } else if protectionArmed {
+            interval = 15
         } else if popoverOpen {
             interval = 30
         } else {

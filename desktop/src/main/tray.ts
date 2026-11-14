@@ -5,12 +5,17 @@ import { join } from 'node:path'
 import type { ShieldState } from '../shared/ipc'
 import type { ShieldStatus } from '../core/models'
 import { shortStatusLabel } from '../core/models'
+import type { ProtectionSummary } from '../shared/protection'
+
+type TrayImageName = ShieldStatus | 'armed' | 'killed'
 
 export interface TrayActions {
   onToggle: () => void
   onRefresh: () => void
   onOpenReport: () => void
   onToggleNotifications: () => void
+  onOpenProtection: () => void
+  onRestoreNetwork: () => void
   onAbout: () => void
   onQuit: () => void
 }
@@ -36,18 +41,23 @@ export class TrayController {
     this.tray.setContextMenu(this.buildMenu(null))
   }
 
-  update(state: ShieldState): void {
+  update(state: ShieldState, protection?: ProtectionSummary): void {
     this.state = state
 
-    const image = this.statusImage(state.status)
+    const imageName: TrayImageName = protection?.triggered
+      ? 'killed'
+      : protection?.armed
+        ? 'armed'
+        : state.status
+    const image = this.statusImage(imageName)
     try {
       this.tray.setImage(image)
     } catch {
       /* keep the previous icon if the platform rejects the image */
     }
 
-    this.tray.setToolTip(this.buildTooltip(state))
-    this.tray.setContextMenu(this.buildMenu(state))
+    this.tray.setToolTip(this.buildTooltip(state, protection))
+    this.tray.setContextMenu(this.buildMenu(state, protection))
   }
 
   getBounds(): Rectangle | null {
@@ -64,7 +74,7 @@ export class TrayController {
     this.tray.destroy()
   }
 
-  private statusImage(status: ShieldStatus): Electron.NativeImage {
+  private statusImage(status: TrayImageName): Electron.NativeImage {
     const trayDirectory = join(resourcesDirectory(), 'tray')
 
     try {
@@ -98,8 +108,16 @@ export class TrayController {
     return image
   }
 
-  private buildTooltip(state: ShieldState): string {
+  private buildTooltip(
+    state: ShieldState,
+    protection?: ProtectionSummary
+  ): string {
+    if (protection?.triggered) {
+      return 'ShieldBar — NETWORK DISABLED by protection. Restore from the tray menu.'
+    }
+
     const parts = [`ShieldBar — ${state.evaluation.headline}`]
+    if (protection?.armed) parts.push('Protection armed')
     if (state.report?.pageIPv4) parts.push(state.report.pageIPv4)
     if (state.lastCheckedAt) {
       parts.push(`checked ${this.relativeAge(state.lastCheckedAt)}`)
@@ -118,12 +136,27 @@ export class TrayController {
     return `${Math.floor(hours / 24)}d ago`
   }
 
-  private buildMenu(state: ShieldState | null): Menu {
+  private buildMenu(
+    state: ShieldState | null,
+    protection?: ProtectionSummary
+  ): Menu {
     const checking = state?.isChecking ?? false
     const notify = state?.notifyOnLeak ?? true
     const status = state?.status ?? 'idle'
 
-    const template: MenuItemConstructorOptions[] = [
+    const template: MenuItemConstructorOptions[] = []
+
+    if (protection?.triggered) {
+      template.push(
+        {
+          label: 'Restore Network',
+          click: () => this.actions.onRestoreNetwork()
+        },
+        { type: 'separator' }
+      )
+    }
+
+    template.push(
       {
         label: `Open ShieldBar (${shortStatusLabel(status)})`,
         click: () => this.actions.onToggle()
@@ -139,6 +172,14 @@ export class TrayController {
       },
       { type: 'separator' },
       {
+        label: protection?.armed
+          ? 'Protection (Armed)…'
+          : protection?.triggered
+            ? 'Protection (Network Disabled)…'
+            : 'Protection…',
+        click: () => this.actions.onOpenProtection()
+      },
+      {
         label: 'Notify on Public Leaks',
         type: 'checkbox',
         checked: notify,
@@ -153,7 +194,7 @@ export class TrayController {
         label: 'Quit ShieldBar',
         click: () => this.actions.onQuit()
       }
-    ]
+    )
 
     return Menu.buildFromTemplate(template)
   }

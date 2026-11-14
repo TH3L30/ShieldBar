@@ -54,6 +54,7 @@ enum PreviewRenderer {
             }
         }
 
+        renderProtectionPreviews(to: directory)
         renderIconSheet(to: directory.appendingPathComponent("menu-bar-icons.png"))
 
         write("Preview directory: \(directory.path)")
@@ -124,6 +125,97 @@ enum PreviewRenderer {
             checkedAt: Date().addingTimeInterval(-22),
             duration: 4.1
         )
+    }
+
+    private static func renderProtectionPreviews(to directory: URL) {
+        for triggered in [false, true] {
+            let controller = ProtectionController(
+                previewState: protectionPreviewState(triggered: triggered)
+            )
+            let view = ProtectionView(controller: controller, scrollable: false)
+            let hosting = NSHostingView(rootView: view)
+            hosting.frame = NSRect(x: 0, y: 0, width: 720, height: 1500)
+            hosting.layoutSubtreeIfNeeded()
+
+            let fitting = hosting.fittingSize
+            let height = max(700, min(1500, fitting.height))
+            hosting.frame = NSRect(x: 0, y: 0, width: 720, height: height)
+
+            let window = NSWindow(
+                contentRect: NSRect(x: -20_000, y: -20_000, width: 720, height: height),
+                styleMask: [.titled],
+                backing: .buffered,
+                defer: false
+            )
+            window.contentView = hosting
+            window.isReleasedWhenClosed = false
+            window.setFrameOrigin(NSPoint(x: -20_000, y: -20_000))
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            window.displayIfNeeded()
+
+            // Let SwiftUI and AppKit controls perform an initial layout/draw.
+            RunLoop.current.run(until: Date().addingTimeInterval(0.35))
+            hosting.layoutSubtreeIfNeeded()
+            window.displayIfNeeded()
+
+            guard let rep = hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds) else {
+                writeError("Could not render protection preview")
+                window.orderOut(nil)
+                continue
+            }
+            hosting.cacheDisplay(in: hosting.bounds, to: rep)
+
+            guard let png = rep.representation(using: .png, properties: [:]) else {
+                writeError("Could not encode protection preview")
+                window.orderOut(nil)
+                continue
+            }
+
+            let name = triggered ? "protection-triggered" : "protection-ready"
+            do {
+                try png.write(to: directory.appendingPathComponent("\(name).png"))
+                write("Rendered \(name).png")
+            } catch {
+                writeError("Could not write \(name): \(error.localizedDescription)")
+            }
+            window.orderOut(nil)
+        }
+    }
+
+    private static func protectionPreviewState(triggered: Bool) -> ProtectionViewState {
+        var state = ProtectionViewState()
+        state.phase = triggered ? .triggered : .ready
+        state.helperInstalled = true
+        state.helperVersion = "1.1.0"
+        state.settings = ProtectionSettings(
+            enabled: true,
+            killOnPublicLeak: true,
+            killOnLocalExposure: false,
+            killOnLocationChange: true,
+            locationFields: [.country],
+            failClosed: false,
+            startAtLogin: true
+        )
+        state.baselineLabel = triggered ? nil : "Canada · Ontario · Toronto"
+        state.baselineCapturedAt = triggered ? nil : Date().addingTimeInterval(-120)
+        state.armed = false
+        state.triggered = triggered
+        state.message = triggered
+            ? "Network disabled: public IP leak."
+            : "Baseline captured for this session."
+        state.lastTrigger = triggered ? .publicLeak : nil
+        state.vpnAdapters = [
+            VPNAdapterInfo(name: "utun3", likelyVPN: true),
+            VPNAdapterInfo(name: "en0", likelyVPN: false)
+        ]
+        state.remoteSession = .none
+        state.currentStatus = .clear
+        state.currentHeadline = "Clear"
+        state.lastCheckedAt = Date().addingTimeInterval(-14)
+        state.canSetBaseline = !triggered
+        state.canArm = !triggered
+        return state
     }
 
     private static func renderIconSheet(to url: URL) {

@@ -345,6 +345,75 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.protection-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 9px;
+  background: rgba(255, 69, 59, 0.1);
+  border: 1px solid rgba(255, 69, 59, 0.2);
+}
+
+.protection-alert > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.protection-alert strong {
+  display: block;
+  font-size: 11px;
+  color: var(--red);
+}
+
+.protection-alert span {
+  display: block;
+  margin-top: 2px;
+  font-size: 9.5px;
+  color: var(--secondary);
+}
+
+.protection-alert .button {
+  flex: 0 0 auto;
+  height: 28px;
+  font-size: 10.5px;
+  padding: 0 9px;
+}
+
+.protection-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid rgba(41, 199, 107, 0.22);
+  border-radius: 9px;
+  background: rgba(41, 199, 107, 0.08);
+  color: var(--text);
+  font: inherit;
+  font-size: 10.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.protection-strip:hover {
+  background: rgba(41, 199, 107, 0.13);
+}
+
+.protection-strip .armed-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(41, 199, 107, 0.15);
+  flex: 0 0 auto;
+}
+
+.protection-strip .strip-arrow {
+  margin-left: auto;
+  color: var(--secondary);
+}
+
 .actions {
   display: flex;
   gap: 8px;

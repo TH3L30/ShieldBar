@@ -9,13 +9,19 @@ import {
 } from 'electron'
 import { join } from 'node:path'
 import { BROWSERLEAKS_URL, APP_ID } from '../shared/constants'
-import { IPC_CHANNELS } from '../shared/ipc'
+import { IPC_CHANNELS, type ShieldState } from '../shared/ipc'
+import {
+  DEFAULT_PROTECTION_SETTINGS,
+  type ProtectionSettings
+} from '../shared/protection'
 import { SettingsStore } from './store'
 import { NotificationController } from './notifications'
 import { TrayController } from './tray'
 import { PopoverController } from './popover'
 import { ReportWindowController } from './report'
 import { Monitor } from './monitor'
+import { ProtectionController } from './protection'
+import { ProtectionWindowController } from './protectionWindow'
 import { runSelfTest } from './selftest'
 import { renderPreviews } from './previewRunner'
 
@@ -29,7 +35,11 @@ let monitor: Monitor | null = null
 let tray: TrayController | null = null
 let popover: PopoverController | null = null
 let reportWindow: ReportWindowController | null = null
+let protection: ProtectionController | null = null
+let protectionWindow: ProtectionWindowController | null = null
 let shuttingDown = false
+let quitConfirmed = false
+let quitPromptOpen = false
 
 app.setName('ShieldBar')
 app.setAppUserModelId(APP_ID)
@@ -57,18 +67,74 @@ app.on('window-all-closed', () => {
   /* keep running */
 })
 
-app.on('before-quit', () => {
+app.on('before-quit', (event) => {
+  if (shuttingDown) return
+
+  if (!quitConfirmed && (protection?.isArmed() || protection?.isTriggered())) {
+    event.preventDefault()
+    void confirmQuit()
+    return
+  }
+
+  cleanup()
+})
+
+function cleanup(): void {
   if (shuttingDown) return
   shuttingDown = true
+  protection?.shutdown()
   monitor?.shutdown()
   tray?.destroy()
   popover?.destroy()
+  protectionWindow?.destroy()
   reportWindow?.destroy()
+  protection = null
+  monitor = null
   tray = null
   popover = null
+  protectionWindow = null
   reportWindow = null
-  monitor = null
-})
+}
+
+async function confirmQuit(): Promise<void> {
+  if (quitPromptOpen) return
+  quitPromptOpen = true
+
+  try {
+    const triggered = protection?.isTriggered() ?? false
+    const armed = protection?.isArmed() ?? false
+    if (!triggered && !armed) {
+      quitConfirmed = true
+      app.quit()
+      return
+    }
+
+    const detail = triggered
+      ? 'Networking is currently disabled by ShieldBar. Quitting will leave it disabled until you restore it from the helper or your operating system.'
+      : 'Protection is armed. Quitting stops monitoring and disarms the kill switch.'
+
+    const result = await dialog.showMessageBox({
+      type: 'warning',
+      title: 'Quit ShieldBar?',
+      message: triggered ? 'Your network is still disabled' : 'Kill switch is armed',
+      detail,
+      buttons: ['Keep ShieldBar Running', 'Quit'],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true
+    })
+
+    if (result.response !== 1) return
+
+    if (armed) {
+      await protection?.disarm()
+    }
+    quitConfirmed = true
+    app.quit()
+  } finally {
+    quitPromptOpen = false
+  }
+}
 
 function showPopover(): void {
   popover?.show(tray?.getBounds() ?? null)
@@ -77,6 +143,45 @@ function showPopover(): void {
 function openFullReport(): void {
   popover?.hide()
   reportWindow?.present()
+}
+
+function currentState(): ShieldState | null {
+  if (!monitor) return null
+  return {
+    ...monitor.getState(),
+    ...(protection ? { protection: protection.summary() } : {})
+  }
+}
+
+function broadcastUiState(): void {
+  const state = currentState()
+  if (!state) return
+  tray?.update(state, state.protection)
+  popover?.sendState(state)
+}
+
+function openProtectionWindow(): void {
+  popover?.hide()
+  protectionWindow?.present()
+  if (protection) {
+    protectionWindow?.sendState(protection.getState())
+    void protection.refreshHelper()
+  }
+}
+
+async function restoreFromTray(): Promise<void> {
+  if (!protection) return
+  const result = await protection.restoreNetwork()
+  if (!result.ok) {
+    void dialog.showMessageBox({
+      type: 'error',
+      title: 'Could not restore networking',
+      message: 'ShieldBar could not restore every network interface.',
+      detail: result.message,
+      buttons: ['OK'],
+      noLink: true
+    })
+  }
 }
 
 function showAbout(): void {
@@ -101,8 +206,9 @@ function showAbout(): void {
 
 function registerIpc(): void {
   ipcMain.handle(IPC_CHANNELS.getState, () => {
-    if (!monitor) throw new Error('ShieldBar is not ready.')
-    return monitor.getState()
+    const state = currentState()
+    if (!state) throw new Error('ShieldBar is not ready.')
+    return state
   })
 
   ipcMain.on(IPC_CHANNELS.refresh, () => {
@@ -145,9 +251,69 @@ function registerIpc(): void {
   ipcMain.on(IPC_CHANNELS.quit, () => {
     app.quit()
   })
+
+  ipcMain.handle(IPC_CHANNELS.getProtectionState, () => {
+    if (!protection) throw new Error('Protection is not ready.')
+    return protection.getState()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.installHelper, async () => {
+    if (!protection) return { ok: false, message: 'Protection is not ready.' }
+    return await protection.installHelper()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.uninstallHelper, async () => {
+    if (!protection) return { ok: false, message: 'Protection is not ready.' }
+    return await protection.uninstallHelper()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.setProtectionBaseline, () => {
+    if (!protection) return { ok: false, message: 'Protection is not ready.' }
+    return protection.setBaseline()
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.armProtection,
+    async (
+      _event,
+      options: { acknowledgeRemote?: boolean; acknowledgeNoVpn?: boolean }
+    ) => {
+      if (!protection) return { ok: false, message: 'Protection is not ready.' }
+      return await protection.arm({
+        acknowledgeRemote: Boolean(options?.acknowledgeRemote),
+        acknowledgeNoVpn: Boolean(options?.acknowledgeNoVpn)
+      })
+    }
+  )
+
+  ipcMain.handle(IPC_CHANNELS.disarmProtection, async () => {
+    if (!protection) return { ok: false, message: 'Protection is not ready.' }
+    return await protection.disarm()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.restoreNetwork, async () => {
+    if (!protection) return { ok: false, message: 'Protection is not ready.' }
+    return await protection.restoreNetwork()
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.updateProtectionSettings,
+    (_event, patch: unknown) => {
+      if (!protection) throw new Error('Protection is not ready.')
+      return protection.updateSettings(
+        patch && typeof patch === 'object'
+          ? (patch as Partial<ProtectionSettings>)
+          : {}
+      )
+    }
+  )
+
+  ipcMain.on(IPC_CHANNELS.openProtection, () => {
+    openProtectionWindow()
+  })
 }
 
-function startApplication(): void {
+async function startApplication(): Promise<void> {
   settings = new SettingsStore()
   reportWindow = new ReportWindowController()
   popover = new PopoverController({
@@ -157,6 +323,10 @@ function startApplication(): void {
   const notifications = new NotificationController(() => {
     showPopover()
   })
+
+  monitor = new Monitor(settings, notifications)
+  protection = new ProtectionController(settings, monitor, notifications)
+  protectionWindow = new ProtectionWindowController()
 
   tray = new TrayController({
     onToggle: () => {
@@ -171,6 +341,12 @@ function startApplication(): void {
     onToggleNotifications: () => {
       monitor?.toggleNotifications()
     },
+    onOpenProtection: () => {
+      openProtectionWindow()
+    },
+    onRestoreNetwork: () => {
+      void restoreFromTray()
+    },
     onAbout: () => {
       showAbout()
     },
@@ -179,18 +355,21 @@ function startApplication(): void {
     }
   })
 
-  monitor = new Monitor(settings, notifications)
-
-  monitor.subscribe((state) => {
-    tray?.update(state)
-    popover?.sendState(state)
+  monitor.subscribe(() => {
+    broadcastUiState()
   })
 
-  tray.update(monitor.getState())
+  protection.subscribe((protectionState) => {
+    protectionWindow?.sendState(protectionState)
+    broadcastUiState()
+  })
+
+  await protection.initialize()
+  broadcastUiState()
   registerIpc()
   monitor.start()
 
-  if (monitor.getState().showWelcome) {
+  if (monitor.getState().showWelcome && !protection.isTriggered()) {
     setTimeout(() => {
       if (monitor?.getState().showWelcome) showPopover()
     }, 900)
@@ -218,9 +397,34 @@ async function runSmokeTest(): Promise<number> {
     showWelcome: false
   }))
 
+  ipcMain.handle(IPC_CHANNELS.getProtectionState, () => ({
+    phase: 'ready',
+    armed: false,
+    triggered: false,
+    beta: true,
+    message: null,
+    lastTrigger: null,
+    baselineLabel: 'Canada',
+    helperInstalled: true,
+    helperVersion: '1.1.0',
+    settings: { ...DEFAULT_PROTECTION_SETTINGS, enabled: true },
+    baseline: {
+      label: 'Canada',
+      fields: ['country'],
+      capturedAt: Date.now()
+    },
+    vpnAdapters: [{ name: 'utun3', likelyVpn: true }],
+    remoteSession: { detected: false, kind: null },
+    lastCheckedAt: Date.now(),
+    currentStatus: 'clear',
+    currentHeadline: 'Clear',
+    canSetBaseline: true,
+    canArm: true
+  }))
+
   const window = new BrowserWindow({
-    width: 386,
-    height: 760,
+    width: 760,
+    height: 900,
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -232,26 +436,47 @@ async function runSmokeTest(): Promise<number> {
 
   try {
     await window.loadFile(join(__dirname, '../renderer/index.html'))
-
+    let dashboardReady = false
     for (let attempt = 0; attempt < 30; attempt += 1) {
       try {
-        const ready = (await window.webContents.executeJavaScript(
+        dashboardReady = (await window.webContents.executeJavaScript(
           `Boolean(document.querySelector('main.card')) && typeof window.shieldbar?.getState === 'function'`
         )) as boolean
-        if (ready) {
-          process.stdout.write(
-            'SMOKE PASS: renderer mounted and preload bridge is available.\n'
-          )
-          return 0
-        }
+        if (dashboardReady) break
       } catch {
         /* React may still be mounting */
       }
       await new Promise((resolve) => setTimeout(resolve, 200))
     }
 
-    process.stderr.write('SMOKE FAIL: the dashboard did not become ready.\n')
-    return 1
+    if (!dashboardReady) {
+      process.stderr.write('SMOKE FAIL: the dashboard did not become ready.\n')
+      return 1
+    }
+
+    await window.loadFile(join(__dirname, '../renderer/protection.html'))
+    let protectionReady = false
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      try {
+        protectionReady = (await window.webContents.executeJavaScript(
+          `Boolean(document.querySelector('.protection-shell')) && Boolean(document.querySelector('h1'))`
+        )) as boolean
+        if (protectionReady) break
+      } catch {
+        /* React may still be mounting */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    }
+
+    if (!protectionReady) {
+      process.stderr.write('SMOKE FAIL: the protection window did not become ready.\n')
+      return 1
+    }
+
+    process.stdout.write(
+      'SMOKE PASS: dashboard and protection renderers mounted; preload bridge is available.\n'
+    )
+    return 0
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     process.stderr.write(`SMOKE FAIL: ${message}\n`)
@@ -297,7 +522,7 @@ if (primaryInstance) {
         return
       }
 
-      startApplication()
+      await startApplication()
     })
     .catch((error: unknown) => {
       const message =
