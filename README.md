@@ -1,210 +1,144 @@
-# ShieldBar
-
-A tray/menu-bar app that shows your public IP details and checks whether the
-system's WebRTC path leaks a different public IP or a local/private IP.
-
-The native macOS app is the primary implementation. A separate Electron
-implementation for Windows and Linux lives in [`desktop/`](desktop/README.md)
-and follows the same strict status rules, probe, cadence, and privacy model.
-
-Data comes from <https://browserleaks.com/ip>. ShieldBar is an independent
-project and is not affiliated with BrowserLeaks.
-
-## Windows and Linux
-
-The Windows/Linux build is an Electron + TypeScript tray app:
-
-- **Windows x64:** NSIS installer and portable zip
-- **Linux x64:** AppImage and `.deb`
-- Summary popover, full BrowserLeaks report window, and leak-only notifications
-- In-memory probe session with no IP history or telemetry
-
-See [`desktop/README.md`](desktop/README.md) for build, test, packaging, and
-platform caveats. The WebRTC check there runs in bundled Chromium rather than
-WebKit, so it reflects Chromium's WebRTC stack on the same system network path,
-not another browser's private stack.
-
-## Screenshots
-
 <p align="center">
-  <img src="docs/screenshots/macos/dashboard-clear.png" width="280" alt="ShieldBar on macOS">
-  <img src="docs/screenshots/windows/dashboard-clear.png" width="280" alt="ShieldBar on Windows">
-  <img src="docs/screenshots/linux/dashboard-clear.png" width="280" alt="ShieldBar on Linux">
+  <img src="desktop/resources/icon.png" width="104" alt="ShieldBar app icon">
 </p>
 
-<p align="center"><em>macOS (native) · Windows · Linux — all showing a Clear result</em></p>
+<h1 align="center">ShieldBar</h1>
 
-See the [screenshot gallery](docs/screenshots/README.md) for public-leak,
-local-exposure, welcome, inconclusive, and offline states on every platform.
-Screenshots use documentation-only IP ranges and contain no real data.
+<p align="center">
+  <strong>Public IP and WebRTC leak monitoring for your menu bar or system tray.</strong><br>
+  <sub>See what the network exposes. Catch a mismatch. Cut the connection when it matters.</sub>
+</p>
 
-## What it shows
+<p align="center">
+  <img alt="macOS arm64" src="https://img.shields.io/badge/macOS-arm64-111111?logo=apple&logoColor=white">
+  <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-0078D4?logo=windows&logoColor=white">
+  <img alt="Linux x64" src="https://img.shields.io/badge/Linux-x64-FCC624?logo=linux&logoColor=black">
+  <img alt="Version 1.1.0" src="https://img.shields.io/badge/version-1.1.0-2ea44f">
+  <img alt="Protection Beta" src="https://img.shields.io/badge/Protection-Beta-orange">
+</p>
 
-Click the shield in the menu bar or system tray to open the summary card:
+<p align="center">
+  <img src="docs/screenshots/macos/dashboard-clear.png" width="260" alt="ShieldBar on macOS showing Clear">
+  <img src="docs/screenshots/windows/dashboard-clear.png" width="260" alt="ShieldBar on Windows showing Clear">
+  <img src="docs/screenshots/linux/dashboard-clear.png" width="260" alt="ShieldBar on Linux showing Clear">
+</p>
 
-- **Public IP** reported by BrowserLeaks, with copy button
-- **Location** (country/city, flag when available) and **ISP**
-- **IPv6** address when BrowserLeaks detects one
-- **WebRTC leak check**: local IP results and the public IP seen through WebRTC
-- Time since the last check and the next scheduled check
+<p align="center"><sub>macOS menu bar · Windows system tray · Linux system tray — all showing Clear, with documentation-only IP ranges</sub></p>
 
-**Full Report** opens the live BrowserLeaks page in a separate window inside
-the app. Navigation there is restricted to `browserleaks.com`; external links
-open in the default browser. On macOS, **Open in Safari** is available from that
-window's toolbar.
+<p align="center"><sub><a href="docs/screenshots/README.md">See every status on every platform →</a></sub></p>
 
-Right-click the tray/menu-bar icon for Refresh, Full Report, notification
-settings, About, and Quit.
+## Download
+
+[**ShieldBar v1.1.0**](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [SHA256SUMS.txt](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0)
+
+| Platform | Requires | Asset |
+| --- | --- | --- |
+| macOS | macOS 13+, Apple silicon | [`ShieldBar-1.1.0-macos-arm64.zip`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0)* |
+| Windows | Windows 10/11, x64 | [`ShieldBar-1.1.0-win-x64.exe`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [`ShieldBar-1.1.0-win-x64.zip`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) |
+| Linux | x64, glibc-based distro | [`ShieldBar-1.1.0-linux-x86_64.AppImage`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [`ShieldBar-1.1.0-linux-amd64.deb`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) |
+
+<sub>* The macOS zip may be attached separately to the release. macOS is ad-hoc signed and not notarized; Windows and Linux builds are unsigned. Verify downloads against `SHA256SUMS.txt`. There is no auto-update.</sub>
+
+## What it does
+
+- **Shows the public IP** reported by BrowserLeaks, plus location, ISP, IPv6, and the time of the last check.
+- **Runs a strict WebRTC check** through ShieldBar's embedded engine and reports Clear, Public IP leak, Local IP exposed, Inconclusive, or Offline.
+- **Opens the live BrowserLeaks report** in a separate window, restricted to `browserleaks.com`.
+- **Offers an optional Protection (Beta) kill switch** that disables networking when a configured condition fires.
+
+The WebRTC check exercises ShieldBar's own embedded WebKit or Chromium path. It cannot inspect Chrome's, Safari's, Firefox's, or another browser's private WebRTC stack.
+
+## Protection (Beta)
+
+> [!WARNING]
+> **Destructive by design.** When armed and triggered, Protection disables **every non-loopback network interface**. It does **not** restore them automatically. Calls, downloads, remote sessions, and local access can drop immediately, and the machine can stay offline until you restore it manually.
+
+Protection is off by default. It requires a one-time privileged helper (admin/root approval), a baseline captured from a Clear result, and manual arming after your VPN is connected. While armed, ShieldBar loads the full BrowserLeaks page every 15 seconds. ShieldBar must stay running: the helper does not monitor the network on its own. Real physical-NIC testing on Windows and macOS is still pending, which is why this feature is Beta.
+
+Read the [Protection kill switch guide](docs/KILL-SWITCH.md) before enabling it.
+
+<p align="center">
+  <img src="docs/screenshots/windows/protection-ready.png" width="340" alt="Protection window on Windows">
+  <img src="docs/screenshots/linux/protection-triggered.png" width="340" alt="Protection triggered on Linux">
+</p>
 
 ## Status rules
 
-ShieldBar is deliberately strict. Green is shown only when all of these hold:
+Clear is the only green state. It requires **all** of the following:
 
 1. The BrowserLeaks page completed and returned a public IPv4 address.
 2. The WebRTC test completed with a final public candidate.
-3. Every WebRTC public address matches the page's public address (IPv4 and
-   IPv6 are normalized before comparison).
+3. Every WebRTC public address matches the page address after IPv4/IPv6 normalization.
 4. No local/private WebRTC address is exposed.
 
-| Status | Meaning |
-| --- | --- |
-| **Clear** (green) | WebRTC public IP matches BrowserLeaks and no local IP is exposed. |
-| **Public IP leak** (red) | WebRTC sees a different public IP than the page. Takes precedence over local exposure. |
-| **Local IP exposed** (amber) | Public IPs match, but a private/local WebRTC address is visible. |
-| **Inconclusive** (amber) | The test was blocked, unsupported, timed out, or returned incomplete data. Never shown as green. |
-| **Offline** (gray) | BrowserLeaks could not be reached. |
-| **Checking** (blue) | A test is running. |
-| **Not checked** (gray) | ShieldBar has not completed a check yet. |
+| | Status | Meaning |
+| --- | --- | --- |
+| 🟢 | **Clear** | Public IPs match and no local IP is exposed. |
+| 🔴 | **Public IP leak** | WebRTC sees a different public IP. Takes precedence over local exposure. |
+| 🟡 | **Local IP exposed** | Public IPs match, but a private/local WebRTC address is visible. |
+| 🟡 | **Inconclusive** | Blocked, unsupported, timed out, or incomplete data. Never shown as green. |
+| ⚪ | **Offline** | BrowserLeaks could not be reached. |
+| 🔵 | **Checking** | A full check is running. |
+| ⚪ | **Not checked** | No check has completed yet. |
 
-Missing data is never treated as success. Notifications fire only when the
-status changes to **Public IP leak**, and never contain IP addresses.
-
-## Check cadence
-
-The card's freshness line updates every second so the "next in…" countdown
-feels live. That is a **UI heartbeat, not a network test**.
-
-Actual BrowserLeaks checks run:
-
-- immediately at launch and when you click the shield (if the last result is
-  older than 8 seconds)
-- every **30 seconds** while the popover is open
-- every **15 minutes** while ShieldBar is in the background
-- every 60 seconds while offline, to detect recovery
-- immediately on a network path change or when the Mac wakes
-
-Running a full BrowserLeaks page load every second would be hostile to the
-service, wasteful of bandwidth, and would make results less reliable. The
-1-second heartbeat is the intended interpretation of "update every second";
-the network check stays at the cadence above.
-
-## How the check works
-
-ShieldBar embeds a hidden, borderless `WKWebView` offscreen and loads the real
-BrowserLeaks `/ip` page with JavaScript enabled. It waits for the page and
-WebRTC rows to settle, then reads the rendered IP, location, ISP, IPv6, and
-WebRTC cells from the DOM. There is no private API, scraping proxy, or
-third-party analytics service involved.
-
-The probe fails closed: if the expected cells are missing, still loading, or
-the page times out, the result is **Inconclusive**, not green.
-
-### WebRTC scope and limits
-
-The WebRTC test runs inside ShieldBar's embedded WebKit view. It exercises the
-Mac's system network path and the VPN/proxy routing that WebKit uses, which is
-the relevant system-wide check.
-
-It cannot inspect another browser's private WebRTC stack. Chrome, Safari,
-Firefox, and other browsers implement their own peer-connection policies and
-may behave differently. Use each browser's own leak test if that is what you
-need to verify.
-
-BrowserLeaks can change its page layout or be unavailable. ShieldBar reports
-those cases as Inconclusive/Offline rather than guessing. This tool is a
-convenience check, not a guarantee of anonymity or VPN correctness.
+Missing data is never treated as success. Public leak takes precedence over local exposure; Inconclusive never becomes Clear.
 
 ## Privacy
 
-- No analytics, telemetry, accounts, or IP history.
-- Non-persistent WebKit data store: cookies, cache, and local storage are
-  discarded.
-- IP addresses are not written to notifications or application logs.
-- The full report window can only navigate within `browserleaks.com`.
-- Network access is limited to loading BrowserLeaks pages and its assets.
+- No accounts, analytics, telemetry, or IP history.
+- Probe and report sessions are in-memory; browsing data is discarded, and probe caches are cleared after every check.
+- Protection baselines are session-only. The exact-IP option is kept only as a salted hash in memory.
+- Notifications never contain IP addresses; the helper logs interface names and states, not addresses.
 
-## Build and install
+See [docs/PRIVACY.md](docs/PRIVACY.md) for the full data-handling details.
 
-Requirements:
+## Install
 
-- macOS on Apple silicon (built and tested as arm64)
-- Command Line Tools with Swift 6.x
-- The **macOS 26.5 SDK** at
-  `/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk`
+- **macOS:** unzip, move `ShieldBar.app` to Applications, then Control-click → **Open** the first time. Requires Apple silicon.
+- **Windows:** run the `.exe` installer, or unpack the portable `.zip`. SmartScreen will warn because the build is unsigned.
+- **Linux:** `chmod +x` the AppImage and run it, or install the `.deb` with `sudo apt install ./ShieldBar-1.1.0-linux-amd64.deb`.
 
-The newer macOS 27 SDK available with Command Line Tools declares SwiftUI
-property wrappers such as `@State` as macros but does not ship the
-`SwiftUIMacros` compiler plugin, so this project builds against 26.5. Override
-the SDK path if yours differs:
+ShieldBar lives in the **menu bar** on macOS and the **system tray** on Windows and Linux. It keeps running when windows close; use **Quit ShieldBar** to exit. Protection requires ShieldBar to stay running.
 
-```sh
-export SHIELDBAR_SDK=/path/to/MacOSX26.5.sdk
-```
+## Platform notes
 
-Build, ad-hoc sign, install to `~/Applications`, and create a zip backup:
+<details>
+<summary><strong>macOS</strong> — arm64, menu bar, ad-hoc signed</summary>
+
+Requires macOS 13 or later on Apple silicon. The app is ad-hoc signed and not notarized, so Gatekeeper may require Control-click → Open. Builds from source use the macOS 26.5 SDK; see [docs/BUILD.md](docs/BUILD.md). If networking is disabled by Protection, run the recovery CLI from the app's actual location:
 
 ```sh
-Scripts/build-app.sh release
+~/Applications/ShieldBar.app/Contents/MacOS/ShieldBar --restore-network
 ```
 
-The app is installed at `~/Applications/ShieldBar.app` with a backup at
-`~/Applications/ShieldBar.app.zip`. It is ad-hoc signed and intended for this
-Mac only; it is not notarized for distribution.
+</details>
 
-Run the unit tests (Swift Testing):
+<details>
+<summary><strong>Windows</strong> — x64, system tray, unsigned</summary>
 
-```sh
-Scripts/test.sh
-```
+Supports Windows 10/11 x64. The per-user NSIS installer does not require administrator rights; the Protection helper does. SmartScreen warns on first launch. Toast notifications are tied to the installer's Start Menu shortcut, so the portable zip may not show them unless you create a shortcut. If Protection disables networking, run `ShieldBar.exe --restore-network` or use the system tray. No auto-update.
 
-Run the live integration self-test against BrowserLeaks from the installed
-app. It prints only redacted addresses and exits non-zero if a complete IP +
-WebRTC result could not be read. A red/amber strict verdict is a valid
-finding, not a self-test failure:
+</details>
 
-```sh
-Scripts/self-test.sh
-```
+<details>
+<summary><strong>Linux</strong> — x64, system tray, AppImage or .deb</summary>
 
-Developer UI previews (documentation-only IP ranges, no network access):
+Supports x64 glibc-based distributions; primarily tested on Ubuntu 24.04. GNOME needs the **AppIndicator and KStatusNotifierItem Support** extension. Wayland compositors may ignore popover positioning. The AppImage requires FUSE; use `--appimage-extract-and-run` if FUSE is unavailable. If Protection disables networking, run the AppImage or installed `shieldbar` with `--restore-network`. Notifications require a running notification daemon. No auto-update.
 
-```sh
-~/Applications/ShieldBar.app/Contents/MacOS/ShieldBar \
-  --render-preview /tmp/shieldbar-preview
-```
+</details>
 
-## Project layout
+## Documentation
 
-```
-Package.swift
-Resources/Info.plist           LSUIElement=true, bundle metadata
-Resources/Attribution.txt
-Sources/ShieldBarCore/         report models, IP normalization, strict evaluator
-Sources/ShieldBar/             AppKit lifecycle, status item, SwiftUI card,
-                               WKWebView probe, full report window,
-                               notifications, self-test, previews
-Tests/ShieldBarCoreTests/      14 Swift Testing cases
-Scripts/build-app.sh           build + icon + bundle + sign + zip
-Scripts/test.sh                unit tests with CLT framework paths
-Scripts/self-test.sh           integration check from the installed bundle
-Scripts/make-icon.swift        vector app icon renderer
-```
+| Document | Contents |
+| --- | --- |
+| [Protection (Beta)](docs/KILL-SWITCH.md) | Kill switch behavior, recovery, failure modes, test status |
+| [Architecture](docs/ARCHITECTURE.md) | Probes, strict evaluator, cadence, helper protocol, process boundaries |
+| [Build](docs/BUILD.md) | macOS and Electron builds, helper builds, packaging, CI, releases |
+| [Privacy](docs/PRIVACY.md) | Exactly what is stored, sent, and discarded |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | Helper, restore, system tray, Gatekeeper, SmartScreen, FUSE, rate limits |
+| [Desktop README](desktop/README.md) | Windows/Linux-specific setup and packaging |
+| [Screenshot gallery](docs/screenshots/README.md) | Every state on every platform |
 
 ## Attribution
 
-IP address and WebRTC data are provided by
-[BrowserLeaks](https://browserleaks.com/ip). BrowserLeaks and its content
-belong to their respective owners. ShieldBar is not affiliated with or
-endorsed by BrowserLeaks. Use of the site is subject to BrowserLeaks' own
-terms. Please be considerate: the default background cadence is 15 minutes,
-not continuous polling.
+IP address and WebRTC data are provided by [BrowserLeaks](https://browserleaks.com/ip). BrowserLeaks and its content belong to their respective owners. ShieldBar is an independent project and is not affiliated with or endorsed by BrowserLeaks. Please be considerate: the default background cadence is 15 minutes, not continuous polling.

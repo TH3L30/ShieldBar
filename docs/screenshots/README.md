@@ -22,6 +22,13 @@ Menu-bar status icons:
 
 ![macOS menu-bar status icons](macos/menu-bar-icons.png)
 
+Protection (Beta) window:
+
+<p>
+  <img src="macos/protection-ready.png" width="360" alt="ShieldBar Protection window on macOS">
+  <img src="macos/protection-triggered.png" width="360" alt="ShieldBar protection triggered on macOS">
+</p>
+
 ## Windows (Electron)
 
 <p>
@@ -36,6 +43,13 @@ Menu-bar status icons:
   <img src="windows/dashboard-offline.png" width="260" alt="ShieldBar on Windows showing an offline result">
 </p>
 
+Protection (Beta) window:
+
+<p>
+  <img src="windows/protection-ready.png" width="360" alt="ShieldBar Protection window on Windows">
+  <img src="windows/protection-triggered.png" width="360" alt="ShieldBar protection triggered on Windows">
+</p>
+
 ## Linux (Electron)
 
 <p>
@@ -48,6 +62,13 @@ Menu-bar status icons:
   <img src="linux/dashboard-welcome.png" width="260" alt="ShieldBar on Linux welcome card">
   <img src="linux/dashboard-inconclusive.png" width="260" alt="ShieldBar on Linux showing an inconclusive result">
   <img src="linux/dashboard-offline.png" width="260" alt="ShieldBar on Linux showing an offline result">
+</p>
+
+Protection (Beta) window:
+
+<p>
+  <img src="linux/protection-ready.png" width="360" alt="ShieldBar Protection window on Linux">
+  <img src="linux/protection-triggered.png" width="360" alt="ShieldBar protection triggered on Linux">
 </p>
 
 ## Status colors
