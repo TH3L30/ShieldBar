@@ -183,6 +183,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "$GITHUB_REF_NAME" release-assets/* \
+            --repo "$GITHUB_REPOSITORY" \
             --draft \
             --title "ShieldBar $GITHUB_REF_NAME" \
             --generate-notes
