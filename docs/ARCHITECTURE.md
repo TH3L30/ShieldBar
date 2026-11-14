@@ -65,7 +65,7 @@ Both implementations load the real `https://browserleaks.com/ip` page with JavaS
 | Poll interval | 450 ms | 450 ms |
 | Timeout | 36 s | 36 s |
 | Cleanup | Session discarded | Window destroyed; storage and cache cleared |
-| Permissions | No page permission prompts | All permission requests denied |
+| Permissions | Media capture denied | All permission requests denied |
 
 The probe waits for the document to finish, a public IPv4 address to appear, and both WebRTC rows to settle. It allows a short grace period for STUN, and returns an incomplete report rather than guessing when the WebRTC rows never settle. Missing cells, loading rows, placeholders, a timeout, or a changed layout produce **Inconclusive** or **Offline**, never green.
 

@@ -33,7 +33,7 @@ Protection is off by default. It requires a one-time privileged helper installed
 - Arm manually after the VPN is connected, from a Clear result with a captured baseline.
 - Public-leak and location-change triggers are on by default; local-IP exposure and fail-closed are off by default.
 - A full BrowserLeaks check runs every 15 seconds while armed.
-- The tray menu shows **Protection…** and, when triggered, **Restore Network** at the top.
+- The system tray menu shows **Protection…** and, when triggered, **Restore Network** at the top.
 - The Protection window is separate from the summary popover.
 - A notification fires when Protection triggers.
 - Start-at-login is available in Protection settings; it starts the app, not the kill switch.
