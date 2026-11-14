@@ -112,10 +112,12 @@ jobs:
 
       - name: Package Windows targets
         if: runner.os == 'Windows'
+        timeout-minutes: 45
         run: npx electron-builder --win nsis zip --x64 --publish never
 
       - name: Package Linux targets
         if: runner.os == 'Linux'
+        timeout-minutes: 30
         run: npx electron-builder --linux AppImage deb --x64 --publish never
 
       - name: Smoke test Windows package
@@ -166,6 +168,11 @@ jobs:
         with:
           path: release-assets
           merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
 
       - name: Create draft release
         env:

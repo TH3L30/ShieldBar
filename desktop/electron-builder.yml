@@ -42,6 +42,7 @@ nsis:
 linux:
   icon: build/icons
   category: Network
+  syncDesktopName: true
   synopsis: Public IP and WebRTC leak monitor
   description: >-
     ShieldBar shows the public IP reported by BrowserLeaks and checks whether

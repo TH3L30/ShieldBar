@@ -72,7 +72,7 @@ unreliable. The background cadence is intentionally conservative.
 - All permission requests (camera, microphone, geolocation, notifications from
   the page, etc.) are denied in both the probe and report sessions.
 
-The only local state is a settings file with two booleans: whether leak
+The only app-created state is a settings file with two booleans: whether leak
 notifications are enabled, and whether the welcome card was dismissed.
 
 ## How the probe works
@@ -129,8 +129,8 @@ Artifacts are written to `desktop/release/`:
 
 - `ShieldBar-1.0.0-win-x64.exe` — per-user NSIS installer
 - `ShieldBar-1.0.0-win-x64.zip` — portable zip
-- `ShieldBar-1.0.0-linux-x64.AppImage`
-- `ShieldBar-1.0.0-linux-x64.deb`
+- `ShieldBar-1.0.0-linux-x86_64.AppImage`
+- `ShieldBar-1.0.0-linux-amd64.deb`
 
 Builds are **unsigned**. Windows SmartScreen will warn about an unknown
 publisher; choose “More info” then “Run anyway” only if you trust the build.
@@ -175,9 +175,10 @@ No code-signing secrets are used.
   always-on-top hints. ShieldBar falls back to positioning near the cursor.
 - AppImage requires FUSE. On systems without FUSE, run it with
   `--appimage-extract-and-run`.
-- If the tray is unavailable, launch the app again or use the application
-  menu/desktop entry; the popover can still be opened from the tray menu when
-  the desktop supports one.
+- If the tray icon is unavailable, launch ShieldBar again from the application
+  menu/desktop entry. The single-instance handler opens the summary popover.
+  This is the fallback for desktops without StatusNotifier/AppIndicator
+  support.
 - Notification delivery depends on a running notification daemon.
 
 ### Both

@@ -34,9 +34,10 @@ let shuttingDown = false
 app.setName('ShieldBar')
 app.setAppUserModelId(APP_ID)
 
+let primaryInstance = true
 if (!CLI_MODE) {
-  const hasLock = app.requestSingleInstanceLock()
-  if (!hasLock) {
+  primaryInstance = app.requestSingleInstanceLock()
+  if (!primaryInstance) {
     app.quit()
   } else {
     app.on('second-instance', () => {
@@ -262,37 +263,40 @@ function previewDirectory(): string | undefined {
   return candidate
 }
 
-app
-  .whenReady()
-  .then(async () => {
-    Menu.setApplicationMenu(null)
+if (primaryInstance) {
+  app
+    .whenReady()
+    .then(async () => {
+      Menu.setApplicationMenu(null)
 
-    if (process.platform === 'darwin') {
-      app.dock?.hide()
-    }
+      if (process.platform === 'darwin') {
+        app.dock?.hide()
+      }
 
-    if (SELF_TEST) {
-      const code = await runSelfTest()
-      app.exit(code)
-      return
-    }
+      if (SELF_TEST) {
+        const code = await runSelfTest()
+        app.exit(code)
+        return
+      }
 
-    if (RENDER_PREVIEW) {
-      const code = await renderPreviews(previewDirectory())
-      app.exit(code)
-      return
-    }
+      if (RENDER_PREVIEW) {
+        const code = await renderPreviews(previewDirectory())
+        app.exit(code)
+        return
+      }
 
-    if (SMOKE_TEST) {
-      const code = await runSmokeTest()
-      app.exit(code)
-      return
-    }
+      if (SMOKE_TEST) {
+        const code = await runSmokeTest()
+        app.exit(code)
+        return
+      }
 
-    startApplication()
-  })
-  .catch((error: unknown) => {
-    const message = error instanceof Error ? error.stack ?? error.message : String(error)
-    process.stderr.write(`ShieldBar failed to start: ${message}\n`)
-    app.exit(1)
-  })
+      startApplication()
+    })
+    .catch((error: unknown) => {
+      const message =
+        error instanceof Error ? error.stack ?? error.message : String(error)
+      process.stderr.write(`ShieldBar failed to start: ${message}\n`)
+      app.exit(1)
+    })
+}

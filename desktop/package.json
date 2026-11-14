@@ -5,6 +5,8 @@
   "description": "Public IP and WebRTC leak monitor for the Windows and Linux system tray",
   "author": "TH3L30 <its.mani.brz@gmail.com>",
   "license": "UNLICENSED",
+  "homepage": "https://github.com/TH3L30/ShieldBar",
+  "desktopName": "ShieldBar.desktop",
   "main": "./out/main/index.js",
   "engines": {
     "node": ">=22.12.0"

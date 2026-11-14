@@ -1,5 +1,6 @@
 import { app, Menu, Tray, nativeImage } from 'electron'
 import type { MenuItemConstructorOptions, Rectangle } from 'electron'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ShieldState } from '../shared/ipc'
 import type { ShieldStatus } from '../core/models'
@@ -64,12 +65,35 @@ export class TrayController {
   }
 
   private statusImage(status: ShieldStatus): Electron.NativeImage {
-    const name = `${status}-32.png`
-    const trayPath = join(resourcesDirectory(), 'tray', name)
-    let image = nativeImage.createFromPath(trayPath)
+    const trayDirectory = join(resourcesDirectory(), 'tray')
+
+    try {
+      const image = nativeImage.createEmpty()
+      const representations: Array<[number, number]> = [
+        [16, 1],
+        [32, 2],
+        [48, 3]
+      ]
+
+      for (const [size, scaleFactor] of representations) {
+        const buffer = readFileSync(join(trayDirectory, `${status}-${size}.png`))
+        image.addRepresentation({
+          scaleFactor,
+          width: size,
+          height: size,
+          buffer
+        })
+      }
+
+      if (!image.isEmpty()) return image
+    } catch {
+      /* fall through to the single-file fallback */
+    }
+
+    const fallbackPath = join(trayDirectory, `${status}-32.png`)
+    let image = nativeImage.createFromPath(fallbackPath)
     if (image.isEmpty()) {
-      const fallback = join(resourcesDirectory(), 'icon.png')
-      image = nativeImage.createFromPath(fallback)
+      image = nativeImage.createFromPath(join(resourcesDirectory(), 'icon.png'))
     }
     return image
   }

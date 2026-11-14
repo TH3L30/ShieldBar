@@ -84,38 +84,34 @@ export function makeReport(
   const countryCode = normalizedCountryCode(
     payload.countryCode ?? payload.pageIPv4CountryCode
   )
+  const country = cleanedCountry(payload.country, countryCode)
+  const pageIPv6 = sanitizedAddress(payload.pageIPv6)
+  const region = trimmedOrNull(payload.region)
+  const city = trimmedOrNull(payload.city)
+  const isp = trimmedOrNull(payload.isp)
+  const organization = trimmedOrNull(payload.organization)
+  const rtcLocalText = trimmedOrNull(payload.rtcLocalText)
+  const rtcPublicText = trimmedOrNull(payload.rtcPublicText)
+  const rtcLeakText = trimmedOrNull(payload.rtcLeakText)
+  const rtcMismatchText = trimmedOrNull(payload.rtcMismatchText)
 
   return {
     pageIPv4: rawIPv4,
-    ...(sanitizedAddress(payload.pageIPv6)
-      ? { pageIPv6: sanitizedAddress(payload.pageIPv6) as string }
-      : {}),
+    ...(pageIPv6 ? { pageIPv6 } : {}),
     ...(countryCode ? { countryCode } : {}),
-    ...(cleanedCountry(payload.country, countryCode)
-      ? { country: cleanedCountry(payload.country, countryCode) as string }
-      : {}),
-    ...(trimmedOrNull(payload.region) ? { region: trimmedOrNull(payload.region) as string } : {}),
-    ...(trimmedOrNull(payload.city) ? { city: trimmedOrNull(payload.city) as string } : {}),
-    ...(trimmedOrNull(payload.isp) ? { isp: trimmedOrNull(payload.isp) as string } : {}),
-    ...(trimmedOrNull(payload.organization)
-      ? { organization: trimmedOrNull(payload.organization) as string }
-      : {}),
+    ...(country ? { country } : {}),
+    ...(region ? { region } : {}),
+    ...(city ? { city } : {}),
+    ...(isp ? { isp } : {}),
+    ...(organization ? { organization } : {}),
     rtcSupported: payload.rtcSupported ?? false,
     rtcTestCompleted: completed,
     rtcLocal: addressList(payload.rtcLocal),
     rtcPublic: addressList(payload.rtcPublic),
-    ...(trimmedOrNull(payload.rtcLocalText)
-      ? { rtcLocalText: trimmedOrNull(payload.rtcLocalText) as string }
-      : {}),
-    ...(trimmedOrNull(payload.rtcPublicText)
-      ? { rtcPublicText: trimmedOrNull(payload.rtcPublicText) as string }
-      : {}),
-    ...(trimmedOrNull(payload.rtcLeakText)
-      ? { rtcLeakText: trimmedOrNull(payload.rtcLeakText) as string }
-      : {}),
-    ...(trimmedOrNull(payload.rtcMismatchText)
-      ? { rtcMismatchText: trimmedOrNull(payload.rtcMismatchText) as string }
-      : {}),
+    ...(rtcLocalText ? { rtcLocalText } : {}),
+    ...(rtcPublicText ? { rtcPublicText } : {}),
+    ...(rtcLeakText ? { rtcLeakText } : {}),
+    ...(rtcMismatchText ? { rtcMismatchText } : {}),
     checkedAt: finishedAtMs,
     duration: Math.max(0, (finishedAtMs - startedAtMs) / 1000)
   }
