@@ -1,0 +1,24 @@
+ShieldBar
+=========
+
+IP address and WebRTC leak monitoring for the macOS menu bar.
+
+Data source: https://browserleaks.com/ip
+ShieldBar is not affiliated with BrowserLeaks.
+
+ShieldBar loads the BrowserLeaks page in an embedded, offscreen WebKit view,
+reads the rendered IP address, location, ISP, IPv6, and WebRTC candidate
+results, and compares the WebRTC public IP with the public IP BrowserLeaks
+reports. It does not use a private BrowserLeaks API.
+
+Privacy:
+- No analytics, telemetry, or IP history.
+- Non-persistent website data store; cookies and cache are discarded.
+- IP addresses are never written to notifications or logs.
+- Full report navigation is restricted to browserleaks.com.
+
+The WebRTC test exercises ShieldBar's embedded WebKit/network path. It is a
+valid system-wide VPN/proxy check. It cannot inspect a separate browser's
+private WebRTC stack (for example, Chrome's or Safari's own peer connections).
+
+BrowserLeaks (c) 2011-2026. All rights reserved by their respective owners.

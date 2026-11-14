@@ -1,0 +1,177 @@
+name: Desktop build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-build.yml"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Typecheck, unit tests, smoke test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install Electron runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
+            libgtk-3-0 libgbm1 libdrm2 libxss1 libxcomposite1 libxdamage1 \
+            libxrandr2 libxkbcommon0 libcups2 libpango-1.0-0 libcairo2 \
+            libdbus-1-3 libglib2.0-0 libx11-6 libxext6 libxfixes3
+          sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build bundles
+        run: npm run build
+
+      - name: Headless smoke test
+        run: xvfb-run -a npx electron . --smoke-test --no-sandbox
+
+      - name: Live BrowserLeaks self-test
+        continue-on-error: true
+        run: xvfb-run -a npx electron . --self-test --no-sandbox
+
+  build:
+    name: Package ${{ matrix.os }}
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install Linux runtime libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
+            libgtk-3-0 libgbm1 libdrm2 libxss1 libxcomposite1 libxdamage1 \
+            libxrandr2 libxkbcommon0 libcups2 libpango-1.0-0 libcairo2 \
+            libdbus-1-3 libglib2.0-0 libx11-6 libxext6 libxfixes3
+          sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build bundles
+        run: npm run build
+
+      - name: Package Windows targets
+        if: runner.os == 'Windows'
+        run: npx electron-builder --win nsis zip --x64 --publish never
+
+      - name: Package Linux targets
+        if: runner.os == 'Linux'
+        run: npx electron-builder --linux AppImage deb --x64 --publish never
+
+      - name: Smoke test Windows package
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path "release\win-unpacked" -Filter "*.exe" |
+            Where-Object { $_.Name -notmatch "ffmpeg|chrome_crashpad" } |
+            Select-Object -First 1
+          if (-not $exe) { throw "No packaged executable found" }
+          & $exe.FullName --smoke-test
+          if ($LASTEXITCODE -ne 0) { throw "Smoke test failed" }
+
+      - name: Smoke test Linux package
+        if: runner.os == 'Linux'
+        run: |
+          executable=$(find release/linux-unpacked -maxdepth 1 -type f -perm -111 | head -n 1)
+          if [ -z "$executable" ]; then
+            echo "No packaged executable found" >&2
+            exit 1
+          fi
+          xvfb-run -a "$executable" --smoke-test --no-sandbox
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shieldbar-${{ runner.os }}-${{ runner.arch }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.zip
+            desktop/release/*.AppImage
+            desktop/release/*.deb
+            desktop/release/*.blockmap
+
+  release:
+    name: Draft release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release-assets/* \
+            --draft \
+            --title "ShieldBar $GITHUB_REF_NAME" \
+            --generate-notes

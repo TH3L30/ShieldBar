@@ -1,0 +1,66 @@
+appId: com.local.shieldbar
+productName: ShieldBar
+copyright: Copyright © 2026 TH3L30
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+
+extraResources:
+  - from: resources
+    to: resources
+    filter:
+      - "**/*"
+
+asar: true
+compression: normal
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: zip
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ShieldBar
+
+linux:
+  icon: build/icons
+  category: Network
+  synopsis: Public IP and WebRTC leak monitor
+  description: >-
+    ShieldBar shows the public IP reported by BrowserLeaks and checks whether
+    WebRTC exposes a different public IP or a local/private address. It lives
+    in the system tray, updates its summary while open, and can notify on
+    public leaks without including IP addresses.
+  maintainer: TH3L30 <its.mani.brz@gmail.com>
+  vendor: TH3L30
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+  desktop:
+    entry:
+      Name: ShieldBar
+      Comment: Public IP and WebRTC leak monitor
+      Categories: Network;Security;
+      StartupWMClass: ShieldBar

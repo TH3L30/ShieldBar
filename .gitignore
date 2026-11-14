@@ -1,0 +1,21 @@
+# macOS native build
+.build/
+
+# Node / Electron
+node_modules/
+desktop/node_modules/
+desktop/out/
+desktop/release/
+desktop/dist/
+desktop/coverage/
+desktop/.vite/
+*.log
+
+# Generated previews and local artifacts
+desktop/preview/
+desktop/*.tsbuildinfo
+
+# OS noise
+.DS_Store
+Thumbs.db
+*.swp
