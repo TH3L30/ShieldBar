@@ -502,7 +502,9 @@ export class ProtectionController {
           this.clearConfirmTimer()
           this.stopInterfacePolling()
           this.monitor.setProtectionArmed(false)
-          this.message = `Network disabled: ${protectionTriggerLabel(reason)}.`
+          this.message = response.ok
+            ? `Network disabled: ${protectionTriggerLabel(reason)}.`
+            : `Network disabled with errors: ${response.message ?? 'some interfaces may still be up.'}`
           this.notifications.notifyProtectionTriggered(reason)
           this.emit()
           return

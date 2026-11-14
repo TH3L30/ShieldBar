@@ -422,7 +422,9 @@ final class ProtectionController: ObservableObject {
                     confirmWorkItem = nil
                     stopInterfacePolling()
                     monitor.setProtectionArmed(false)
-                    message = "Network disabled: \(trigger.label)."
+                    message = response.ok
+                        ? "Network disabled: \(trigger.label)."
+                        : "Network disabled with errors: \(response.message ?? "some interfaces may still be up.")"
                     monitor.notifyProtectionTriggered(trigger)
                     refreshViewState()
                     return

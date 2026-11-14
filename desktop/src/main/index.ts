@@ -22,13 +22,15 @@ import { ReportWindowController } from './report'
 import { Monitor } from './monitor'
 import { ProtectionController } from './protection'
 import { ProtectionWindowController } from './protectionWindow'
+import { HelperClient } from './helperClient'
 import { runSelfTest } from './selftest'
 import { renderPreviews } from './previewRunner'
 
 const SELF_TEST = process.argv.includes('--self-test')
 const SMOKE_TEST = process.argv.includes('--smoke-test')
 const RENDER_PREVIEW = process.argv.includes('--render-preview')
-const CLI_MODE = SELF_TEST || SMOKE_TEST || RENDER_PREVIEW
+const RESTORE_NETWORK = process.argv.includes('--restore-network')
+const CLI_MODE = SELF_TEST || SMOKE_TEST || RENDER_PREVIEW || RESTORE_NETWORK
 
 let settings: SettingsStore | null = null
 let monitor: Monitor | null = null
@@ -321,7 +323,11 @@ async function startApplication(): Promise<void> {
   })
 
   const notifications = new NotificationController(() => {
-    showPopover()
+    if (protection?.isTriggered()) {
+      openProtectionWindow()
+    } else {
+      showPopover()
+    }
   })
 
   monitor = new Monitor(settings, notifications)
@@ -502,6 +508,22 @@ if (primaryInstance) {
 
       if (process.platform === 'darwin') {
         app.dock?.hide()
+      }
+
+      if (RESTORE_NETWORK) {
+        try {
+          const response = await new HelperClient().restore()
+          process.stdout.write(
+            `${response.message ?? (response.ok ? 'Networking restored.' : 'Restore failed.')}\n`
+          )
+          app.exit(response.ok ? 0 : 1)
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error)
+          process.stderr.write(`FAIL: ${message}\n`)
+          app.exit(1)
+        }
+        return
       }
 
       if (SELF_TEST) {
