@@ -32,6 +32,8 @@ export async function renderPreviews(outputDirectory?: string): Promise<number> 
   const rendererHtml = join(__dirname, '../renderer/index.html')
   const preload = join(__dirname, '../preload/index.js')
 
+  await warmUp(rendererHtml, preload)
+
   let failures = 0
 
   for (const state of PREVIEW_STATES) {
@@ -91,21 +93,68 @@ function previewFilename(state: PreviewState): string {
 async function captureWithRetry(window: BrowserWindow): Promise<Buffer> {
   let lastError: unknown = null
 
-  for (let attempt = 0; attempt < 5; attempt += 1) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
     try {
+      window.webContents.invalidate()
+      await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 250 : 700))
+
       const image = await window.webContents.capturePage()
       const png = image.toPNG()
-      if (png.length > 0) return png
-      lastError = new Error('capturePage returned an empty image')
+
+      if (png.length > 0 && hasVisiblePixels(image)) return png
+      lastError = new Error('capturePage returned a blank frame')
     } catch (error) {
       lastError = error
-    }
-
-    if (attempt < 4) {
-      await new Promise((resolve) => setTimeout(resolve, 400))
     }
   }
 
   const message = lastError instanceof Error ? lastError.message : 'unknown error'
   throw new Error(`capturePage failed after retries: ${message}`)
+}
+
+function hasVisiblePixels(image: Electron.NativeImage): boolean {
+  const bitmap = image.toBitmap()
+  let visible = 0
+
+  for (let index = 3; index < bitmap.length; index += 4) {
+    if (bitmap[index] > 8) {
+      visible += 1
+      if (visible > 5_000) return true
+    }
+  }
+
+  return false
+}
+
+/**
+ * The first compositor surface on Windows CI can stay blank until something
+ * has painted once. Load and capture a throwaway dashboard first.
+ */
+async function warmUp(rendererHtml: string, preload: string): Promise<void> {
+  const window = new BrowserWindow({
+    width: PREVIEW_WIDTH,
+    height: PREVIEW_HEIGHT,
+    x: -20_000,
+    y: -20_000,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      preload,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  })
+
+  try {
+    await window.loadFile(rendererHtml, { search: 'preview=clear' })
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    await captureWithRetry(window)
+  } catch {
+    /* the real captures still retry and will surface any failure */
+  } finally {
+    window.destroy()
+  }
 }
