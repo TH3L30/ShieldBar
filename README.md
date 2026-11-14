@@ -24,6 +24,20 @@ platform caveats. The WebRTC check there runs in bundled Chromium rather than
 WebKit, so it reflects Chromium's WebRTC stack on the same system network path,
 not another browser's private stack.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/macos/dashboard-clear.png" width="280" alt="ShieldBar on macOS">
+  <img src="docs/screenshots/windows/dashboard-clear.png" width="280" alt="ShieldBar on Windows">
+  <img src="docs/screenshots/linux/dashboard-clear.png" width="280" alt="ShieldBar on Linux">
+</p>
+
+<p align="center"><em>macOS (native) · Windows · Linux — all showing a Clear result</em></p>
+
+See the [screenshot gallery](docs/screenshots/README.md) for public-leak,
+local-exposure, welcome, inconclusive, and offline states on every platform.
+Screenshots use documentation-only IP ranges and contain no real data.
+
 ## What it shows
 
 Click the shield in the menu bar to open the summary card:

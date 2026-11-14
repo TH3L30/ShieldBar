@@ -10,6 +10,20 @@ privacy model.
 
 ShieldBar is an independent project and is not affiliated with BrowserLeaks.
 
+## Screenshots
+
+Captured by the real Electron app on each platform, using documentation-only IP
+ranges:
+
+<p>
+  <img src="../docs/screenshots/windows/dashboard-clear.png" width="300" alt="ShieldBar on Windows">
+  <img src="../docs/screenshots/linux/dashboard-clear.png" width="300" alt="ShieldBar on Linux">
+</p>
+
+See the [screenshot gallery](../docs/screenshots/README.md) for leak,
+local-exposure, welcome, inconclusive, and offline states, plus the native
+macOS app.
+
 ## Features
 
 - Tray icon whose color and glyph reflect the latest strict verdict
