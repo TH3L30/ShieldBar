@@ -127,11 +127,11 @@ A location mismatch is re-read after 2 seconds before it fires. This filters a s
 
 - A full BrowserLeaks page load runs every **15 seconds**. This is intentionally aggressive and generates real traffic to BrowserLeaks.
 - Network path changes, adapter changes, and wake trigger a check after a short settle delay (adapter polling is every 5 seconds).
-- If BrowserLeaks is slow, rate-limiting, or unavailable, the result may be **Inconclusive** or **Offline**. With fail-closed enabled, an Inconclusive result can fire the kill switch.
+- If BrowserLeaks is slow, rate-limiting, or unavailable, the result may be **Inconclusive** or **Offline**. With fail-closed enabled, an Inconclusive result can fire the kill switch. Offline does not fire automatically; ShieldBar rechecks when connectivity returns.
 
 ### Rate limits and backoff
 
-The next check is scheduled only after the current one finishes, so checks never overlap. A trigger during a check collapses into one pending check. Offline retries slow to **60 seconds**. ShieldBar does not run a separate HTTP 429 retry loop: a blocked or rate-limited page is reported as Inconclusive or Offline, and your fail-closed choice determines whether that fires the kill switch.
+The next check is scheduled only after the current one finishes, so checks never overlap. A trigger during a check collapses into one pending check. Offline retries slow to **60 seconds**. ShieldBar does not run a separate HTTP 429 retry loop: a blocked or rate-limited page is reported as Inconclusive or Offline. Fail-closed can fire on Inconclusive; Offline never fires the kill switch automatically, because connectivity is already down or unverifiable.
 
 ## What happens on a kill
 

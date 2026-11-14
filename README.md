@@ -37,7 +37,7 @@
 | Windows | Windows 10/11, x64 | [`ShieldBar-1.1.0-win-x64.exe`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [`ShieldBar-1.1.0-win-x64.zip`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) |
 | Linux | x64, glibc-based distro | [`ShieldBar-1.1.0-linux-x86_64.AppImage`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) · [`ShieldBar-1.1.0-linux-amd64.deb`](https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.0) |
 
-<sub>* The macOS zip may be attached separately to the release. macOS is ad-hoc signed and not notarized; Windows and Linux builds are unsigned. Verify downloads against `SHA256SUMS.txt`. There is no auto-update.</sub>
+<sub>* The macOS build is arm64, ad-hoc signed, and not notarized. Windows and Linux builds are unsigned. Verify downloads against `SHA256SUMS.txt`. There is no auto-update.</sub>
 
 ## What it does
 
