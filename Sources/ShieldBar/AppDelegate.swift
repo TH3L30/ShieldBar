@@ -7,6 +7,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var monitor = Monitor()
     private lazy var protection = ProtectionController(monitor: monitor)
+    private lazy var updates = UpdateController(monitor: monitor)
     private var statusBarController: StatusBarController?
     private var fullReportController: FullReportWindowController?
     private var protectionWindowController: ProtectionWindowController?
@@ -38,7 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let statusBar = StatusBarController(
             monitor: monitor,
-            protection: protection
+            protection: protection,
+            updates: updates
         )
         statusBar.onOpenFullReport = { [weak self] in
             self?.openFullReport()
@@ -48,6 +50,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         statusBar.onRestoreNetwork = { [weak self] in
             self?.restoreNetworkFromUI()
+        }
+        statusBar.onCheckForUpdates = { [weak self] in
+            self?.checkForUpdates()
         }
         statusBarController = statusBar
 
@@ -62,6 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         monitor.start()
         protection.start()
+        updates.start()
 
         if monitor.showWelcome, !protection.isTriggered {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak statusBar] in
@@ -128,6 +134,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 alert.addButton(withTitle: "OK")
                 alert.runModal()
             }
+        }
+    }
+
+    private func checkForUpdates() {
+        Task {
+            let result = await updates.check(manual: true)
+            let state = updates.viewState
+
+            if !result.ok {
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = "Could not check for updates"
+                alert.informativeText = result.message
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+                return
+            }
+
+            if state.updateAvailable, let version = state.latestVersion {
+                let alert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = "ShieldBar \(version) is available"
+                alert.informativeText = "ShieldBar does not install updates automatically. Open the release page to download it."
+                alert.addButton(withTitle: "View Release")
+                alert.addButton(withTitle: "Later")
+                if alert.runModal() == .alertFirstButtonReturn {
+                    updates.openRelease()
+                }
+                return
+            }
+
+            if let notice = state.notice {
+                let alert = NSAlert()
+                alert.alertStyle = notice.severity == .critical ? .critical : .informational
+                alert.messageText = notice.title
+                alert.informativeText = notice.message
+                alert.addButton(withTitle: notice.url == nil ? "OK" : "View Release")
+                if notice.url != nil, alert.runModal() == .alertFirstButtonReturn {
+                    updates.openRelease()
+                }
+                return
+            }
+
+            let alert = NSAlert()
+            alert.alertStyle = .informational
+            alert.messageText = "ShieldBar is up to date"
+            alert.informativeText = "You are running ShieldBar \(state.currentVersion)."
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
         }
     }
 

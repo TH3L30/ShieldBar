@@ -16,6 +16,7 @@ platform. The macOS captures were rendered by the native SwiftUI app.
 
 <p>
   <img src="macos/dashboard-welcome.png" width="260" alt="ShieldBar on macOS welcome card">
+  <img src="macos/dashboard-update.png" width="260" alt="ShieldBar on macOS showing an update banner">
 </p>
 
 Menu-bar status icons:

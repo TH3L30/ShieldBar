@@ -130,9 +130,17 @@ While Protection is armed, ShieldBar performs a **full BrowserLeaks page load ev
 
 ShieldBar does not proxy BrowserLeaks traffic, does not use a private API, and does not send data to any other service.
 
-## No telemetry or update pings
+## No telemetry, but signed update checks
 
-ShieldBar has no analytics SDK, account system, telemetry endpoint, or configured crash-report upload. It does not check for updates, because there is no auto-updater. ShieldBar itself makes no other network requests; the BrowserLeaks pages are the only remote content it asks for.
+ShieldBar has no analytics SDK, account system, telemetry endpoint, or configured crash-report upload. It does make one deliberate request outside BrowserLeaks: about 8 seconds after launch, then every 24 hours, it downloads the small signed update manifest and signature from GitHub Releases.
+
+- GitHub receives the usual network metadata, including the IP address and user agent.
+- ShieldBar sends no device identifier, account, report, baseline, or usage data.
+- Nothing is downloaded or installed automatically; the alert only opens the release page.
+- Automatic update checks can be disabled in Settings. Manual checks remain explicit.
+- The locally stored update state is limited to the preference and last notified/dismissed version or notice IDs.
+
+See [UPDATES.md](UPDATES.md) for the signed feed and verification rules.
 
 ## Local inspection
 
@@ -148,11 +156,12 @@ None of this local information is transmitted.
 
 - Turn off leak notifications in the menu bar or system tray.
 - Turn off Protection and restore networking at any time.
+- Turn off automatic update checks in Settings.
 - Quit ShieldBar to clear all in-memory reports and baselines.
-- Delete the settings file to remove stored preferences.
+- Delete the settings file to remove stored preferences and update-version IDs.
 - Remove the helper to delete its state and service.
 - Use BrowserLeaks' own controls and policies for data held by BrowserLeaks.
 
 ## Changes
 
-If a future version adds persistence, telemetry, or a new network destination, this document and the app's behavior must be updated together. The current v1.1.1 build does not include any such feature.
+If a future version adds persistence, telemetry, or another network destination, this document and the app's behavior must be updated together. The v1.1.2 build has no telemetry; its only non-BrowserLeaks request is the signed update feed described above.

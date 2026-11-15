@@ -177,7 +177,20 @@ export class ProtectionController {
 
     const result = await installProtectionHelper()
     if (result.ok) {
-      await this.refreshHelper()
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        await this.refreshHelper()
+        if (this.helperInstalled) break
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+
+      if (!this.helperInstalled) {
+        this.phase = 'error'
+        this.message =
+          'The helper was installed but did not start. Check Task Scheduler (Windows), launchd (macOS), or systemd (Linux), then use Repair helper.'
+        this.emit()
+        return { ok: false, message: this.message }
+      }
+
       this.message = result.message
     } else {
       this.phase = 'unavailable'

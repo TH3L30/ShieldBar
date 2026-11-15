@@ -8,7 +8,8 @@ const PREVIEW_NAMES = [
   'local',
   'welcome',
   'inconclusive',
-  'offline'
+  'offline',
+  'update'
 ] as const
 
 export type PreviewName = (typeof PREVIEW_NAMES)[number]
@@ -136,6 +137,23 @@ export function previewState(name: PreviewName | null): ShieldState | null {
       return baseState(localExposureReport())
     case 'inconclusive':
       return baseState(inconclusiveReport())
+    case 'update':
+      return {
+        ...baseState(clearReport()),
+        update: {
+          phase: 'available',
+          currentVersion: '1.1.1',
+          latestVersion: '1.1.2',
+          releaseUrl:
+            'https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2',
+          notice: null,
+          message: 'ShieldBar 1.1.2 is available.',
+          autoCheck: true,
+          dismissed: false,
+          noticeSeen: true,
+          lastCheckedAt: Date.now() - 20_000
+        }
+      }
     case 'offline': {
       const report = clearReport()
       const evaluation = StatusEvaluator.evaluate(report)

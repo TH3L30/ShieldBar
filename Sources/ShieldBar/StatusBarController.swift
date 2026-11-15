@@ -7,18 +7,25 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
     var onOpenFullReport: (() -> Void)?
     var onOpenProtection: (() -> Void)?
     var onRestoreNetwork: (() -> Void)?
+    var onCheckForUpdates: (() -> Void)?
 
     private let monitor: Monitor
     private let protection: ProtectionController
+    private let updates: UpdateController
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
     private var hostingController: NSHostingController<DashboardView>?
     private var cancellables = Set<AnyCancellable>()
     private var lastPopoverClose: Date?
 
-    init(monitor: Monitor, protection: ProtectionController) {
+    init(
+        monitor: Monitor,
+        protection: ProtectionController,
+        updates: UpdateController
+    ) {
         self.monitor = monitor
         self.protection = protection
+        self.updates = updates
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
         configureStatusItem()
@@ -88,7 +95,12 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
             }
         )
 
-        let view = DashboardView(monitor: monitor, protection: protection, actions: actions)
+        let view = DashboardView(
+            monitor: monitor,
+            protection: protection,
+            updates: updates,
+            actions: actions
+        )
         let hosting = NSHostingController(rootView: view)
         hosting.sizingOptions = [.preferredContentSize]
         hostingController = hosting
@@ -210,6 +222,14 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
         notifyItem.state = monitor.notifyOnLeak ? .on : .off
         menu.addItem(notifyItem)
 
+        menu.addItem(
+            withTitle: updates.viewState.updateAvailable
+                ? "Update Available (\(updates.viewState.latestVersion ?? ""))…"
+                : "Check for Updates…",
+            action: #selector(checkForUpdates),
+            keyEquivalent: ""
+        ).target = self
+
         menu.addItem(.separator())
         menu.addItem(
             withTitle: "About ShieldBar",
@@ -241,6 +261,10 @@ final class StatusBarController: NSObject, NSPopoverDelegate {
 
     @objc private func restoreNetwork() {
         onRestoreNetwork?()
+    }
+
+    @objc private func checkForUpdates() {
+        onCheckForUpdates?()
     }
 
     @objc private func toggleNotifications() {

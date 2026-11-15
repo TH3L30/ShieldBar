@@ -45,6 +45,29 @@ export class NotificationController {
     notification.show()
   }
 
+  notifyUpdateAvailable(version: string, onOpen: () => void): void {
+    if (!Notification.isSupported()) return
+
+    const notification = new Notification({
+      title: `ShieldBar ${version} is available`,
+      body: 'Open the release page to download the new version. Update alerts never download or install anything automatically.',
+      silent: false,
+      timeoutType: 'default'
+    })
+
+    this.active.add(notification)
+    const forget = (): void => {
+      this.active.delete(notification)
+    }
+    notification.on('click', () => {
+      forget()
+      onOpen()
+    })
+    notification.on('close', forget)
+    notification.on('failed', forget)
+    notification.show()
+  }
+
   notifyProtectionTriggered(trigger: ProtectionTrigger): void {
     if (!Notification.isSupported()) return
 

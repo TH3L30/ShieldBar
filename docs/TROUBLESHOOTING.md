@@ -24,7 +24,7 @@ Try these in order:
    ShieldBar.exe --restore-network
 
    # Linux AppImage; use the installed shieldbar binary for a .deb
-   ./ShieldBar-1.1.1-linux-x86_64.AppImage --restore-network
+   ./ShieldBar-1.1.2-linux-x86_64.AppImage --restore-network
    ```
 
 4. Helper command line, with administrator/root privileges:
@@ -138,6 +138,24 @@ Common causes:
 - **VPN adapter warning.** Confirm manually only if the VPN is actually connected.
 - **Check in progress.** Wait for it to finish.
 
+## Update checks fail
+
+### “The update feed is unavailable”
+
+GitHub Releases could not be reached. Check your connection and try **Check for Updates…** again. The check is optional and never blocks the leak monitor.
+
+### “The update manifest signature is invalid”
+
+ShieldBar rejected the feed. Do not download anything from that response. Verify that the latest release has `latest.json` and `latest.json.sig` and that the workflow used the correct signing key.
+
+### No update banner
+
+The version may already be current, the banner may be dismissed for that version, or automatic checks may be off. Use **Check for Updates…** in Settings to force a check. Versions before 1.1.2 do not have the updater.
+
+### Notifications
+
+Update notifications use the same OS notification permission as leak alerts. If notifications are disabled, the banner still appears inside ShieldBar.
+
 ## Notifications do not appear
 
 Checks and the kill switch still work without notifications; only the alert is suppressed.
@@ -162,14 +180,14 @@ Closing the popover or report window does not quit the app. Use **Quit ShieldBar
 The AppImage requires FUSE.
 
 ```sh
-chmod +x ShieldBar-1.1.1-linux-x86_64.AppImage
-./ShieldBar-1.1.1-linux-x86_64.AppImage
+chmod +x ShieldBar-1.1.2-linux-x86_64.AppImage
+./ShieldBar-1.1.2-linux-x86_64.AppImage
 ```
 
 If FUSE is unavailable:
 
 ```sh
-./ShieldBar-1.1.1-linux-x86_64.AppImage --appimage-extract-and-run
+./ShieldBar-1.1.2-linux-x86_64.AppImage --appimage-extract-and-run
 ```
 
 Installing your distribution's FUSE 2 compatibility package is the permanent fix. The `.deb` does not need FUSE.
@@ -187,7 +205,7 @@ The Windows build is unsigned, so SmartScreen warns about an unknown publisher.
 3. Verify the download against `SHA256SUMS.txt`:
 
    ```powershell
-   Get-FileHash .\ShieldBar-1.1.1-win-x64.exe -Algorithm SHA256
+   Get-FileHash .\ShieldBar-1.1.2-win-x64.exe -Algorithm SHA256
    ```
 
 There is no code-signing certificate and no auto-update.

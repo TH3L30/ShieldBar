@@ -17,12 +17,20 @@ interface SettingsData {
   notifyOnLeak: boolean
   hasSeenWelcome: boolean
   protection: ProtectionSettings
+  autoCheckUpdates: boolean
+  lastNotifiedUpdateVersion: string | null
+  dismissedUpdateVersion: string | null
+  lastSeenNoticeId: string | null
 }
 
 const DEFAULTS: SettingsData = {
   notifyOnLeak: true,
   hasSeenWelcome: false,
-  protection: { ...DEFAULT_PROTECTION_SETTINGS }
+  protection: { ...DEFAULT_PROTECTION_SETTINGS },
+  autoCheckUpdates: true,
+  lastNotifiedUpdateVersion: null,
+  dismissedUpdateVersion: null,
+  lastSeenNoticeId: null
 }
 
 /**
@@ -56,6 +64,43 @@ export class SettingsStore {
     this.save()
   }
 
+  get autoCheckUpdates(): boolean {
+    return this.data.autoCheckUpdates
+  }
+
+  setAutoCheckUpdates(value: boolean): void {
+    if (this.data.autoCheckUpdates === value) return
+    this.data = { ...this.data, autoCheckUpdates: value }
+    this.save()
+  }
+
+  get lastNotifiedUpdateVersion(): string | null {
+    return this.data.lastNotifiedUpdateVersion
+  }
+
+  markUpdateNotified(version: string): void {
+    this.data = { ...this.data, lastNotifiedUpdateVersion: version }
+    this.save()
+  }
+
+  get dismissedUpdateVersion(): string | null {
+    return this.data.dismissedUpdateVersion
+  }
+
+  dismissUpdateVersion(version: string): void {
+    this.data = { ...this.data, dismissedUpdateVersion: version }
+    this.save()
+  }
+
+  get lastSeenNoticeId(): string | null {
+    return this.data.lastSeenNoticeId
+  }
+
+  markNoticeSeen(id: string): void {
+    this.data = { ...this.data, lastSeenNoticeId: id }
+    this.save()
+  }
+
   setNotifyOnLeak(value: boolean): void {
     if (this.data.notifyOnLeak === value) return
     this.data = { ...this.data, notifyOnLeak: value }
@@ -85,7 +130,19 @@ export class SettingsStore {
         protection: normalizeSettings(
           parsed.protection,
           DEFAULT_PROTECTION_SETTINGS
-        )
+        ),
+        autoCheckUpdates:
+          typeof parsed.autoCheckUpdates === 'boolean'
+            ? parsed.autoCheckUpdates
+            : DEFAULTS.autoCheckUpdates,
+        lastNotifiedUpdateVersion: versionString(
+          parsed.lastNotifiedUpdateVersion
+        ),
+        dismissedUpdateVersion: versionString(parsed.dismissedUpdateVersion),
+        lastSeenNoticeId:
+          typeof parsed.lastSeenNoticeId === 'string'
+            ? parsed.lastSeenNoticeId.slice(0, 80)
+            : null
       }
     } catch {
       return {
@@ -106,4 +163,10 @@ export class SettingsStore {
       process.stderr.write(`ShieldBar: could not save settings: ${message}\n`)
     }
   }
+}
+
+function versionString(value: unknown): string | null {
+  return typeof value === 'string' && /^\d+\.\d+\.\d+$/.test(value)
+    ? value
+    : null
 }

@@ -171,6 +171,10 @@ final class Monitor: ObservableObject {
         notifications.requestAuthorizationIfNeeded()
     }
 
+    func notifyUpdateAvailable(_ version: String) {
+        notifications.notifyUpdateAvailable(version)
+    }
+
     func setPopoverOpen(_ open: Bool) {
         popoverOpen = open
 

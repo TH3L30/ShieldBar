@@ -172,10 +172,10 @@ Artifacts are written to `desktop/release/`:
 
 | Asset | Format |
 | --- | --- |
-| `ShieldBar-1.1.1-win-x64.exe` | Per-user NSIS installer |
-| `ShieldBar-1.1.1-win-x64.zip` | Portable zip |
-| `ShieldBar-1.1.1-linux-x86_64.AppImage` | AppImage |
-| `ShieldBar-1.1.1-linux-amd64.deb` | Debian package |
+| `ShieldBar-1.1.2-win-x64.exe` | Per-user NSIS installer |
+| `ShieldBar-1.1.2-win-x64.zip` | Portable zip |
+| `ShieldBar-1.1.2-linux-x86_64.AppImage` | AppImage |
+| `ShieldBar-1.1.2-linux-amd64.deb` | Debian package |
 
 The version comes from `desktop/package.json`. Packaging is unsigned and uses `CSC_IDENTITY_AUTO_DISCOVERY=false` in CI. There is no auto-updater.
 
@@ -208,9 +208,35 @@ Jobs:
 
 1. **Test (Ubuntu):** Node 22, Go 1.27.x, `npm ci`, typecheck, Vitest, `go test ./...`, bundle build, headless Electron smoke test, and a non-blocking live BrowserLeaks self-test.
 2. **Package (Windows and Ubuntu matrix):** builds the helper, builds the bundles, packages the x64 targets, smoke-tests the unpacked executable, and uploads artifacts.
-3. **Draft release (tag pushes):** downloads the artifacts, generates `SHA256SUMS.txt`, and creates a draft GitHub release with `gh release create --draft`.
+3. **Draft release (tag pushes):** downloads the artifacts, generates and signs `latest.json`, generates `SHA256SUMS.txt`, and creates a draft GitHub release with `gh release create --draft`.
 
-No code-signing secrets are used. Windows and Linux artifacts are unsigned; the macOS build is ad-hoc signed locally and is not built by this workflow.
+The release job uses the `UPDATE_SIGNING_KEY` Actions secret to sign the update manifest. No code-signing secrets are used. Windows and Linux artifacts are unsigned; the macOS build is ad-hoc signed locally and is not built by this workflow.
+
+## Update feed
+
+Every release includes:
+
+- `latest.json` — schema, version, release URL, and optional security notice
+- `latest.json.sig` — detached Ed25519 signature over the exact `latest.json` bytes
+
+The apps fetch them from:
+
+```text
+https://github.com/TH3L30/ShieldBar/releases/latest/download/latest.json
+https://github.com/TH3L30/ShieldBar/releases/latest/download/latest.json.sig
+```
+
+The public verification key is committed in `Sources/ShieldBarCore/UpdateModels.swift` and `desktop/src/main/updatePublicKey.ts`. The private key exists only as the GitHub Actions secret.
+
+Generate a test manifest locally:
+
+```sh
+UPDATE_SIGNING_KEY="$(cat /path/to/private-key.pem)" \
+VERSION=1.1.2 \
+node scripts/generate-update-manifest.mjs --output /tmp/update-feed
+```
+
+The release workflow sets `VERSION`/`GITHUB_REF_NAME` and `RELEASED_AT` automatically. Set `UPDATE_NOTICE_JSON` to a valid notice object to include a security message. See [UPDATES.md](UPDATES.md).
 
 ## Release process
 
@@ -221,11 +247,12 @@ No code-signing secrets are used. Windows and Linux artifacts are unsigned; the 
    - the README badges, download table, and asset names
 2. Run the native and Electron test suites, plus both self-tests on a machine with working network access.
 3. Build the macOS app locally and create its zip (`Scripts/build-app.sh` writes `ShieldBar.app.zip`). Run `Scripts/self-test.sh` against the installed bundle.
-4. Commit the version bump and tag it, for example `v1.1.1`.
-5. Let CI create the draft release with the Windows and Linux assets and `SHA256SUMS.txt`.
-6. Attach the macOS arm64 zip manually as `ShieldBar-1.1.1-macos-arm64.zip`. Because CI generated the checksum file before the macOS asset existed, add the macOS checksum and upload the updated `SHA256SUMS.txt`.
-7. Smoke-test the installers on clean Windows, Linux, and macOS machines or VMs.
-8. Publish the draft.
+4. Commit the version bump and tag it, for example `v1.1.2`.
+5. Let CI create the draft release with the Windows and Linux assets, `latest.json`, `latest.json.sig`, and `SHA256SUMS.txt`.
+6. Attach the macOS arm64 zip manually as `ShieldBar-1.1.2-macos-arm64.zip`. Because CI generated the checksum file before the macOS asset existed, add the macOS checksum and upload the updated `SHA256SUMS.txt`.
+7. Verify the signed feed with the production public key before publishing.
+8. Smoke-test the installers on clean Windows, Linux, and macOS machines or VMs.
+9. Publish the draft. The public `releases/latest/download/latest.json` URL becomes the next update-check target.
 
 ### Artifact contents
 

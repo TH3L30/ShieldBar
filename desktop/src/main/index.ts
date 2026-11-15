@@ -22,6 +22,7 @@ import { ReportWindowController } from './report'
 import { Monitor } from './monitor'
 import { ProtectionController } from './protection'
 import { ProtectionWindowController } from './protectionWindow'
+import { UpdateController } from './updater'
 import { HelperClient } from './helperClient'
 import { runSelfTest } from './selftest'
 import { renderPreviews } from './previewRunner'
@@ -39,6 +40,7 @@ let popover: PopoverController | null = null
 let reportWindow: ReportWindowController | null = null
 let protection: ProtectionController | null = null
 let protectionWindow: ProtectionWindowController | null = null
+let updates: UpdateController | null = null
 let shuttingDown = false
 let quitConfirmed = false
 let quitPromptOpen = false
@@ -84,12 +86,14 @@ app.on('before-quit', (event) => {
 function cleanup(): void {
   if (shuttingDown) return
   shuttingDown = true
+  updates?.dispose()
   protection?.shutdown()
   monitor?.shutdown()
   tray?.destroy()
   popover?.destroy()
   protectionWindow?.destroy()
   reportWindow?.destroy()
+  updates = null
   protection = null
   monitor = null
   tray = null
@@ -151,7 +155,8 @@ function currentState(): ShieldState | null {
   if (!monitor) return null
   return {
     ...monitor.getState(),
-    ...(protection ? { protection: protection.summary() } : {})
+    ...(protection ? { protection: protection.summary() } : {}),
+    ...(updates ? { update: updates.getState() } : {})
   }
 }
 
@@ -184,6 +189,64 @@ async function restoreFromTray(): Promise<void> {
       noLink: true
     })
   }
+}
+
+async function checkUpdatesFromMenu(): Promise<void> {
+  if (!updates) return
+  const result = await updates.check(true)
+  const state = updates.getState()
+
+  if (!result.ok) {
+    void dialog.showMessageBox({
+      type: 'error',
+      title: 'Could not check for updates',
+      message: 'The update check failed.',
+      detail: result.message,
+      buttons: ['OK'],
+      noLink: true
+    })
+    return
+  }
+
+  if (state.phase === 'available' && state.latestVersion && !state.dismissed) {
+    const choice = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Update available',
+      message: `ShieldBar ${state.latestVersion} is available.`,
+      detail:
+        'ShieldBar does not download or install updates automatically. Open the release page to download it.',
+      buttons: ['View Release', 'Later'],
+      defaultId: 0,
+      cancelId: 1,
+      noLink: true
+    })
+    if (choice.response === 0) updates.openRelease()
+    return
+  }
+
+  if (state.notice) {
+    const choice = await dialog.showMessageBox({
+      type: state.notice.severity === 'critical' ? 'warning' : 'info',
+      title: state.notice.title,
+      message: state.notice.title,
+      detail: state.notice.message,
+      buttons: state.notice.url ? ['View Release', 'Close'] : ['Close'],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true
+    })
+    if (choice.response === 0 && state.notice.url) updates.openRelease()
+    return
+  }
+
+  void dialog.showMessageBox({
+    type: 'info',
+    title: 'ShieldBar is up to date',
+    message: `You are running ShieldBar ${state.currentVersion}.`,
+    detail: 'No newer version is available.',
+    buttons: ['OK'],
+    noLink: true
+  })
 }
 
 function showAbout(): void {
@@ -313,6 +376,31 @@ function registerIpc(): void {
   ipcMain.on(IPC_CHANNELS.openProtection, () => {
     openProtectionWindow()
   })
+
+  ipcMain.handle(IPC_CHANNELS.getUpdateState, () => {
+    if (!updates) throw new Error('Updates are not ready.')
+    return updates.getState()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.checkForUpdates, async () => {
+    if (!updates) return { ok: false, message: 'Updates are not ready.' }
+    return await updates.check(true)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.dismissUpdate, () => {
+    if (!updates) throw new Error('Updates are not ready.')
+    updates.dismiss()
+    return updates.getState()
+  })
+
+  ipcMain.on(IPC_CHANNELS.openUpdateRelease, () => {
+    updates?.openRelease()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.setAutoCheckUpdates, (_event, value: unknown) => {
+    if (!updates) throw new Error('Updates are not ready.')
+    return updates.setAutoCheck(Boolean(value))
+  })
 }
 
 async function startApplication(): Promise<void> {
@@ -333,6 +421,7 @@ async function startApplication(): Promise<void> {
   monitor = new Monitor(settings, notifications)
   protection = new ProtectionController(settings, monitor, notifications)
   protectionWindow = new ProtectionWindowController()
+  updates = new UpdateController(settings, notifications)
 
   tray = new TrayController({
     onToggle: () => {
@@ -353,6 +442,9 @@ async function startApplication(): Promise<void> {
     onRestoreNetwork: () => {
       void restoreFromTray()
     },
+    onCheckForUpdates: () => {
+      void checkUpdatesFromMenu()
+    },
     onAbout: () => {
       showAbout()
     },
@@ -370,10 +462,15 @@ async function startApplication(): Promise<void> {
     broadcastUiState()
   })
 
+  updates.subscribe(() => {
+    broadcastUiState()
+  })
+
   await protection.initialize()
   broadcastUiState()
   registerIpc()
   monitor.start()
+  updates.start()
 
   if (monitor.getState().showWelcome && !protection.isTriggered()) {
     setTimeout(() => {
@@ -412,7 +509,7 @@ async function runSmokeTest(): Promise<number> {
     lastTrigger: null,
     baselineLabel: 'Canada',
     helperInstalled: true,
-    helperVersion: '1.1.1',
+    helperVersion: '1.1.2',
     settings: { ...DEFAULT_PROTECTION_SETTINGS, enabled: true },
     baseline: {
       label: 'Canada',

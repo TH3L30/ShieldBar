@@ -232,18 +232,32 @@ export function ProtectionApp() {
             </span>
           </div>
           {state.helperInstalled ? (
-            <button
-              type="button"
-              className="button subtle"
-              disabled={busy !== null}
-              onClick={() =>
-                void runAction('uninstall', () =>
-                  window.shieldbar.uninstallHelper()
-                )
-              }
-            >
-              {busy === 'uninstall' ? 'Removing…' : 'Remove helper'}
-            </button>
+            <div className="helper-actions">
+              <button
+                type="button"
+                className="button subtle"
+                disabled={busy !== null}
+                onClick={() =>
+                  void runAction('install', () =>
+                    window.shieldbar.installHelper()
+                  )
+                }
+              >
+                {busy === 'install' ? 'Repairing…' : 'Repair'}
+              </button>
+              <button
+                type="button"
+                className="button subtle"
+                disabled={busy !== null}
+                onClick={() =>
+                  void runAction('uninstall', () =>
+                    window.shieldbar.uninstallHelper()
+                  )
+                }
+              >
+                {busy === 'uninstall' ? 'Removing…' : 'Remove helper'}
+              </button>
+            </div>
           ) : (
             <button
               type="button"

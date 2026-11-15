@@ -202,10 +202,16 @@ struct ProtectionView: View {
                 }
                 Spacer()
                 if state.helperInstalled {
-                    Button(busy == "uninstall" ? "Removing…" : "Remove helper") {
-                        Task { await uninstallHelper() }
+                    HStack(spacing: 6) {
+                        Button(busy == "install" ? "Repairing…" : "Repair") {
+                            Task { await installHelper() }
+                        }
+                        .disabled(busy != nil)
+                        Button(busy == "uninstall" ? "Removing…" : "Remove helper") {
+                            Task { await uninstallHelper() }
+                        }
+                        .disabled(busy != nil)
                     }
-                    .disabled(busy != nil)
                 } else {
                     Button(busy == "install" ? "Waiting for approval…" : "Install helper") {
                         Task { await installHelper() }

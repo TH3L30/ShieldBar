@@ -25,6 +25,9 @@ enum PreviewRenderer {
         let previewProtection = ProtectionController(
             previewState: protectionPreviewState(triggered: false)
         )
+        let previewUpdates = UpdateController(
+            monitor: Monitor(previewReport: clearReport())
+        )
 
         let previews: [(String, Monitor)] = [
             ("dashboard-clear", Monitor(previewReport: clearReport())),
@@ -41,6 +44,7 @@ enum PreviewRenderer {
             let view = DashboardView(
                 monitor: monitor,
                 protection: previewProtection,
+                updates: previewUpdates,
                 actions: actions
             )
             let renderer = ImageRenderer(content: view)
@@ -64,6 +68,7 @@ enum PreviewRenderer {
         }
 
         renderProtectionPreviews(to: directory)
+        renderUpdatePreview(to: directory)
         renderIconSheet(to: directory.appendingPathComponent("menu-bar-icons.png"))
 
         write("Preview directory: \(directory.path)")
@@ -136,6 +141,59 @@ enum PreviewRenderer {
         )
     }
 
+    private static func renderUpdatePreview(to directory: URL) {
+        var updateState = UpdateViewState()
+        updateState.phase = .available
+        updateState.currentVersion = "1.1.1"
+        updateState.latestVersion = "1.1.2"
+        updateState.releaseURL = URL(
+            string: "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2"
+        )
+        updateState.message = "ShieldBar 1.1.2 is available."
+        updateState.autoCheck = true
+        updateState.dismissed = false
+        updateState.noticeSeen = true
+        updateState.lastCheckedAt = Date().addingTimeInterval(-20)
+
+        let protection = ProtectionController(
+            previewState: protectionPreviewState(triggered: false)
+        )
+        let monitor = Monitor(previewReport: clearReport())
+        let actions = DashboardActions(
+            openFullReport: {},
+            openProtection: {},
+            restoreNetwork: {},
+            quit: {},
+            showAbout: {},
+            openBrowserLeaks: {}
+        )
+        let view = DashboardView(
+            monitor: monitor,
+            protection: protection,
+            updates: UpdateController(previewState: updateState),
+            actions: actions
+        )
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        renderer.proposedSize = ProposedViewSize(width: 386, height: nil)
+
+        guard let image = renderer.nsImage,
+              let tiff = image.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:])
+        else {
+            writeError("Could not render dashboard-update")
+            return
+        }
+
+        do {
+            try png.write(to: directory.appendingPathComponent("dashboard-update.png"))
+            write("Rendered dashboard-update.png")
+        } catch {
+            writeError("Could not write dashboard-update: \(error.localizedDescription)")
+        }
+    }
+
     private static func renderProtectionPreviews(to directory: URL) {
         for triggered in [false, true] {
             let controller = ProtectionController(
@@ -196,7 +254,7 @@ enum PreviewRenderer {
         var state = ProtectionViewState()
         state.phase = triggered ? .triggered : .ready
         state.helperInstalled = true
-        state.helperVersion = "1.1.1"
+        state.helperVersion = "1.1.2"
         state.settings = ProtectionSettings(
             enabled: true,
             killOnPublicLeak: true,

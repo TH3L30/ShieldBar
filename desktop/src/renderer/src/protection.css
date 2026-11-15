@@ -354,6 +354,13 @@ body {
   border: 1px solid var(--border);
 }
 
+.helper-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
 .helper-row > div,
 .baseline-box > div,
 .inline-setting > div,

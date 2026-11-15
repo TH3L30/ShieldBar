@@ -44,6 +44,22 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         UNUserNotificationCenter.current().add(request)
     }
 
+    func notifyUpdateAvailable(_ version: String) {
+        guard isRunningInAppBundle else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "ShieldBar \(version) is available"
+        content.body = "Open the release page to download the new version. Nothing installs automatically."
+        content.sound = .default
+        content.threadIdentifier = "shieldbar-update"
+
+        let request = UNNotificationRequest(
+            identifier: "shieldbar.update.\(version)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
     func notifyProtectionTriggered(_ trigger: ProtectionTrigger) {
         guard isRunningInAppBundle else { return }
         let content = UNMutableNotificationContent()

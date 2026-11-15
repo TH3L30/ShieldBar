@@ -345,6 +345,73 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: rgba(10, 132, 255, 0.08);
+  border: 1px solid rgba(10, 132, 255, 0.18);
+}
+
+.update-banner > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.update-banner strong {
+  display: block;
+  font-size: 11px;
+}
+
+.update-banner span {
+  display: block;
+  margin-top: 2px;
+  font-size: 9.5px;
+  line-height: 1.35;
+  color: var(--secondary);
+}
+
+.update-banner.warning {
+  background: rgba(255, 158, 10, 0.09);
+  border-color: rgba(255, 158, 10, 0.2);
+}
+
+.update-banner.critical {
+  background: rgba(255, 69, 59, 0.1);
+  border-color: rgba(255, 69, 59, 0.22);
+}
+
+.update-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.button.small {
+  height: 27px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.update-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.update-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9.5px;
+  color: var(--secondary);
+}
+
 .protection-alert {
   display: flex;
   align-items: center;

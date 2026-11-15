@@ -40,6 +40,17 @@ Protection is off by default. It requires a one-time privileged helper installed
 
 The app supports `--restore-network` from its executable, so you can recover without opening a window. The system tray menu, the helper's `restore` command, and the operating system's network settings remain available as fallbacks. See the [Protection kill switch guide](../docs/KILL-SWITCH.md) before enabling it.
 
+## Updates
+
+ShieldBar checks a signed GitHub release feed about 8 seconds after launch and every 24 hours. It shows an in-app banner and one OS notification per version; **View Release** opens the release page. Nothing downloads or installs automatically.
+
+- **Check for Updates…** is in the tray menu and the popover Settings.
+- **Check for updates automatically** can be disabled in Settings.
+- The manifest is Ed25519-signed and verified against an embedded public key before parsing.
+- The check contacts GitHub and reveals normal network metadata, including your IP, to GitHub. No device identifier or usage data is sent.
+
+See [docs/UPDATES.md](../docs/UPDATES.md) for the feed contract, signing, privacy, and troubleshooting.
+
 ## Status rules
 
 Green is only possible when **all** of these hold:
@@ -109,10 +120,10 @@ npm run dist:linux  # AppImage + .deb (x64)
 
 Artifacts are written to `desktop/release/`:
 
-- `ShieldBar-1.1.1-win-x64.exe` — per-user NSIS installer
-- `ShieldBar-1.1.1-win-x64.zip` — portable zip
-- `ShieldBar-1.1.1-linux-x86_64.AppImage`
-- `ShieldBar-1.1.1-linux-amd64.deb`
+- `ShieldBar-1.1.2-win-x64.exe` — per-user NSIS installer
+- `ShieldBar-1.1.2-win-x64.zip` — portable zip
+- `ShieldBar-1.1.2-linux-x86_64.AppImage`
+- `ShieldBar-1.1.2-linux-amd64.deb`
 
 Builds are unsigned. Windows SmartScreen warns about an unknown publisher; Linux packages are unsigned too. There is no auto-updater.
 

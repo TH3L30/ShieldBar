@@ -6,6 +6,7 @@ import SwiftUI
 struct DashboardView: View {
     @ObservedObject var monitor: Monitor
     @ObservedObject var protection: ProtectionController
+    @ObservedObject var updates: UpdateController
     let actions: DashboardActions
 
     @State private var copiedIP = false
@@ -17,6 +18,7 @@ struct DashboardView: View {
             if monitor.showWelcome {
                 welcomeCard
             }
+            updateBanner
             protectionCard
             ipCard
             webRTCard
@@ -82,6 +84,94 @@ struct DashboardView: View {
             RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(Color.accentColor.opacity(0.09))
         )
+    }
+
+    @ViewBuilder
+    private var updateBanner: some View {
+        let state = updates.viewState
+        if let notice = state.notice, !state.noticeSeen {
+            HStack(alignment: .top, spacing: 9) {
+                Image(systemName: notice.severity == .critical
+                    ? "exclamationmark.octagon.fill"
+                    : "megaphone.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(notice.severity == .critical ? .red : .orange)
+                    .frame(width: 16, height: 16)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(notice.title)
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(notice.message)
+                        .font(.system(size: 9.5))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+
+                if notice.url != nil {
+                    Button("View") {
+                        updates.openRelease()
+                    }
+                    .controlSize(.small)
+                    .font(.system(size: 10))
+                }
+                Button {
+                    updates.dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Dismiss update notice")
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill((notice.severity == .critical ? Color.red : Color.orange).opacity(0.09))
+            )
+        } else if state.updateAvailable {
+            HStack(alignment: .top, spacing: 9) {
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.accentColor)
+                    .frame(width: 16, height: 16)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("ShieldBar \(state.latestVersion ?? "") is available")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("Open the release page to download it. Nothing installs automatically.")
+                        .font(.system(size: 9.5))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+
+                Button("View Release") {
+                    updates.openRelease()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .font(.system(size: 10))
+
+                Button {
+                    updates.dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Dismiss update")
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color.accentColor.opacity(0.07))
+            )
+        }
     }
 
     private var protectionCard: some View {
@@ -361,6 +451,39 @@ struct DashboardView: View {
                     .font(.system(size: 9.5))
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+
+                Divider()
+
+                Toggle(
+                    "Check for updates automatically",
+                    isOn: Binding(
+                        get: { updates.viewState.autoCheck },
+                        set: { updates.setAutoCheck($0) }
+                    )
+                )
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .font(.system(size: 10.5))
+
+                HStack(spacing: 8) {
+                    Text("Version \(updates.viewState.currentVersion)")
+                        .font(.system(size: 9.5))
+                        .foregroundColor(.secondary)
+                    Spacer(minLength: 0)
+                    Button("Check for Updates…") {
+                        Task { _ = await updates.check(manual: true) }
+                    }
+                    .font(.system(size: 9.5))
+                    .buttonStyle(.borderless)
+                }
+
+                if let message = updates.viewState.message,
+                   updates.viewState.phase == .error || updates.viewState.phase == .upToDate {
+                    Text(message)
+                        .font(.system(size: 9))
+                        .foregroundColor(updates.viewState.phase == .error ? .orange : .secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 HStack(spacing: 10) {
                     Button("Protection…") {

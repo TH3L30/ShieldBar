@@ -29,6 +29,7 @@ export function App() {
   const [now, setNow] = useState(() => Date.now())
   const [copied, setCopied] = useState(false)
   const [copyTimer, setCopyTimer] = useState<number | null>(null)
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null)
   const cardRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -143,6 +144,35 @@ export function App() {
   const evaluating = state.isChecking
   const localAddresses = report ? reportLocalAddresses(report) : []
   const publicAddresses = report ? reportPublicAddresses(report) : []
+  const update = state.update
+  const updateAvailable =
+    update?.phase === 'available' &&
+    Boolean(update.latestVersion) &&
+    !update.dismissed
+  const updateNotice = update?.notice ?? null
+
+  const checkUpdates = async (): Promise<void> => {
+    setUpdateMessage('Checking for updates…')
+    try {
+      const result = await window.shieldbar.checkForUpdates()
+      setUpdateMessage(result.message)
+      const next = await window.shieldbar.getUpdateState()
+      setState((current) => (current ? { ...current, update: next } : current))
+    } catch (error) {
+      setUpdateMessage(
+        error instanceof Error ? error.message : 'The update check failed.'
+      )
+    }
+  }
+
+  const setAutoUpdates = async (value: boolean): Promise<void> => {
+    try {
+      const next = await window.shieldbar.setAutoCheckUpdates(value)
+      setState((current) => (current ? { ...current, update: next } : current))
+    } catch {
+      setUpdateMessage('Could not save the update preference.')
+    }
+  }
 
   return (
     <main className="card" ref={cardRef} aria-live="polite">
@@ -153,6 +183,60 @@ export function App() {
           <p>{state.evaluation.detail}</p>
         </div>
       </header>
+
+      {updateNotice && !update?.noticeSeen && (
+        <section className={`update-banner ${updateNotice.severity}`}>
+          <div>
+            <strong>{updateNotice.title}</strong>
+            <span>{updateNotice.message}</span>
+          </div>
+          <div className="update-banner-actions">
+            {updateNotice.url && (
+              <button
+                type="button"
+                className="button small"
+                onClick={() => window.shieldbar.openUpdateRelease()}
+              >
+                View
+              </button>
+            )}
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="Dismiss update notice"
+              onClick={() => void window.shieldbar.dismissUpdate()}
+            >
+              ×
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!updateNotice && updateAvailable && (
+        <section className="update-banner available">
+          <div>
+            <strong>ShieldBar {update.latestVersion} is available</strong>
+            <span>Open the release page to download it. Nothing installs automatically.</span>
+          </div>
+          <div className="update-banner-actions">
+            <button
+              type="button"
+              className="button small primary"
+              onClick={() => window.shieldbar.openUpdateRelease()}
+            >
+              View Release
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="Dismiss update"
+              onClick={() => void window.shieldbar.dismissUpdate()}
+            >
+              ×
+            </button>
+          </div>
+        </section>
+      )}
 
       {state.protection?.triggered && (
         <section className="protection-alert" aria-label="Protection triggered">
@@ -385,6 +469,32 @@ export function App() {
             Notifications never include IP addresses. They fire only when the
             status changes to a public leak.
           </p>
+
+          <div className="update-settings">
+            <label className="toggle-row">
+              <span>Check for updates automatically</span>
+              <input
+                type="checkbox"
+                checked={update?.autoCheck ?? true}
+                onChange={() => void setAutoUpdates(!(update?.autoCheck ?? true))}
+              />
+              <span className="switch" aria-hidden="true" />
+            </label>
+            <div className="update-actions">
+              <span>
+                Current version {update?.currentVersion ?? '—'}
+                {update?.phase === 'upToDate' ? ' · up to date' : ''}
+              </span>
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => void checkUpdates()}
+              >
+                Check for Updates…
+              </button>
+            </div>
+            {updateMessage && <p className="footnote">{updateMessage}</p>}
+          </div>
 
           <div className="settings-actions">
             <button

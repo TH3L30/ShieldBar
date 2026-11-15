@@ -206,6 +206,20 @@ The helper does not monitor the network continuously, does not re-disable interf
 | Linux | `shieldbar-helper.service` | `/usr/local/lib/shieldbar/shieldbar-helper` | `/run/shieldbar-helper.sock` | `/var/lib/shieldbar-helper` |
 | Windows | Scheduled task `ShieldBarProtectionHelper` | `%ProgramData%\ShieldBar\shieldbar-helper.exe` | `\\.\pipe\shieldbar-protection-helper` | `%ProgramData%\ShieldBar` |
 
+## Update feed
+
+Both apps have a small update controller with the same contract:
+
+- Fetch `latest.json` and `latest.json.sig` from the latest published GitHub release.
+- Verify the Ed25519 signature over the exact manifest bytes before parsing.
+- Validate schema, semver, release date, and release URL against the repository prefix.
+- Compare versions numerically. A newer version produces an in-app banner and one notification; nothing is downloaded or installed.
+- Automatic checks run about 8 seconds after launch and every 24 hours. Manual checks bypass the preference. The automatic check can be disabled.
+- Dismissed versions and notified versions are stored locally; no baseline, IP, or report is attached to an update check.
+- An optional signed notice can carry a short security message and a release URL.
+
+The feed URL is public because the repository is public. The private signing key exists only in GitHub Actions; the public key is embedded in both apps. The release workflow generates both feed files for every `v*` tag.
+
 ## Privacy invariants
 
 - Reports, IP addresses, WebRTC candidates, and baseline values are never written to disk.

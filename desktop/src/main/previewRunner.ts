@@ -8,7 +8,8 @@ const PREVIEW_STATES = [
   'local',
   'welcome',
   'inconclusive',
-  'offline'
+  'offline',
+  'update'
 ] as const
 
 type PreviewState = (typeof PREVIEW_STATES)[number]

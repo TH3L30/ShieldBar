@@ -99,7 +99,17 @@ final class ProtectionController: ObservableObject {
         let result = await HelperInstaller.install()
         message = result.message
         if result.ok {
-            await refreshHelper()
+            for _ in 0..<12 {
+                await refreshHelper()
+                if helperInstalled { break }
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
+            if !helperInstalled {
+                phase = .error
+                message = "The helper was installed but did not start. Check launchd/systemd/Task Scheduler, then use Repair helper."
+                refreshViewState()
+                return ProtectionActionResult(ok: false, message: message ?? "")
+            }
         } else {
             phase = .unavailable
             refreshViewState()

@@ -5,6 +5,10 @@ import type {
   ProtectionState,
   ProtectionSummary
 } from './protection'
+import type {
+  UpdateActionResult,
+  UpdateState
+} from './update'
 
 export interface ShieldState {
   status: ShieldStatus
@@ -17,6 +21,7 @@ export interface ShieldState {
   notifyOnLeak: boolean
   showWelcome: boolean
   protection?: ProtectionSummary
+  update?: UpdateState
 }
 
 export interface ShieldBarAPI {
@@ -50,6 +55,12 @@ export interface ShieldBarAPI {
   onProtectionState: (
     callback: (state: ProtectionState) => void
   ) => () => void
+
+  getUpdateState: () => Promise<UpdateState>
+  checkForUpdates: () => Promise<UpdateActionResult>
+  dismissUpdate: () => Promise<UpdateState>
+  openUpdateRelease: () => void
+  setAutoCheckUpdates: (value: boolean) => Promise<UpdateState>
 }
 
 export const IPC_CHANNELS = {
@@ -74,5 +85,10 @@ export const IPC_CHANNELS = {
   restoreNetwork: 'shieldbar:restore-network',
   updateProtectionSettings: 'shieldbar:update-protection-settings',
   openProtection: 'shieldbar:open-protection',
-  protectionState: 'shieldbar:protection-state'
+  protectionState: 'shieldbar:protection-state',
+  getUpdateState: 'shieldbar:get-update-state',
+  checkForUpdates: 'shieldbar:check-for-updates',
+  dismissUpdate: 'shieldbar:dismiss-update',
+  openUpdateRelease: 'shieldbar:open-update-release',
+  setAutoCheckUpdates: 'shieldbar:set-auto-check-updates'
 } as const

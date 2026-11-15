@@ -9,6 +9,10 @@ import type {
   ProtectionSettings,
   ProtectionState
 } from '../shared/protection'
+import type {
+  UpdateActionResult,
+  UpdateState
+} from '../shared/update'
 
 const api: ShieldBarAPI = {
   getState: () => ipcRenderer.invoke(IPC_CHANNELS.getState) as Promise<ShieldState>,
@@ -67,7 +71,20 @@ const api: ShieldBarAPI = {
     }
     ipcRenderer.on(IPC_CHANNELS.protectionState, listener)
     return () => ipcRenderer.removeListener(IPC_CHANNELS.protectionState, listener)
-  }
+  },
+
+  getUpdateState: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.getUpdateState) as Promise<UpdateState>,
+  checkForUpdates: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.checkForUpdates) as Promise<UpdateActionResult>,
+  dismissUpdate: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.dismissUpdate) as Promise<UpdateState>,
+  openUpdateRelease: () => ipcRenderer.send(IPC_CHANNELS.openUpdateRelease),
+  setAutoCheckUpdates: (value: boolean) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.setAutoCheckUpdates,
+      value
+    ) as Promise<UpdateState>
 }
 
 contextBridge.exposeInMainWorld('shieldbar', api)

@@ -4,6 +4,10 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import type { ProtectionActionResult } from '../shared/protection'
+import {
+  buildWindowsInstallScript,
+  buildWindowsUninstallScript
+} from './windowsScripts'
 
 const execFileAsync = promisify(execFile)
 
@@ -67,12 +71,7 @@ export async function installProtectionHelper(): Promise<ProtectionActionResult>
       if (!sid) {
         return { ok: false, message: 'Could not determine the current Windows user SID.' }
       }
-      const script = [
-        `$process = Start-Process -FilePath ${psQuote(binary)}`,
-        `-ArgumentList @('install','--sid',${psQuote(sid)})`,
-        '-Verb RunAs -Wait -PassThru -WindowStyle Hidden',
-        'exit $process.ExitCode'
-      ].join(' ')
+      const script = buildWindowsInstallScript(binary, sid)
       await execFileAsync(
         'powershell.exe',
         ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script],
@@ -113,12 +112,7 @@ export async function uninstallProtectionHelper(): Promise<ProtectionActionResul
     }
 
     if (process.platform === 'win32') {
-      const script = [
-        `$process = Start-Process -FilePath ${psQuote(binary)}`,
-        `-ArgumentList @('uninstall')`,
-        '-Verb RunAs -Wait -PassThru -WindowStyle Hidden',
-        'exit $process.ExitCode'
-      ].join(' ')
+      const script = buildWindowsUninstallScript(binary)
       await execFileAsync(
         'powershell.exe',
         ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script],
@@ -174,6 +168,4 @@ function appleScriptQuote(value: string): string {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
 }
 
-function psQuote(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`
-}
+

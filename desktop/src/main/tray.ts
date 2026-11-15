@@ -16,6 +16,7 @@ export interface TrayActions {
   onToggleNotifications: () => void
   onOpenProtection: () => void
   onRestoreNetwork: () => void
+  onCheckForUpdates: () => void
   onAbout: () => void
   onQuit: () => void
 }
@@ -184,6 +185,10 @@ export class TrayController {
         type: 'checkbox',
         checked: notify,
         click: () => this.actions.onToggleNotifications()
+      },
+      {
+        label: 'Check for Updates…',
+        click: () => this.actions.onCheckForUpdates()
       },
       { type: 'separator' },
       {
