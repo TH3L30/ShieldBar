@@ -109,7 +109,9 @@ ShieldBar checks a signed release feed at launch and every 24 hours, shows an in
 See [docs/UPDATES.md](docs/UPDATES.md) for the feed schema, signature verification, privacy, and troubleshooting.
 
 <p align="center">
-  <img src="docs/screenshots/macos/dashboard-update.png" width="300" alt="ShieldBar update banner">
+  <img src="docs/screenshots/macos/dashboard-update.png" width="250" alt="Update banner on macOS">
+  <img src="docs/screenshots/windows/dashboard-update.png" width="250" alt="Update banner on Windows">
+  <img src="docs/screenshots/linux/dashboard-update.png" width="250" alt="Update banner on Linux">
 </p>
 
 ## Platform notes

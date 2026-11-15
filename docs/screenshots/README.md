@@ -44,6 +44,10 @@ Protection (Beta) window:
   <img src="windows/dashboard-offline.png" width="260" alt="ShieldBar on Windows showing an offline result">
 </p>
 
+<p>
+  <img src="windows/dashboard-update.png" width="260" alt="ShieldBar on Windows showing an update banner">
+</p>
+
 Protection (Beta) window:
 
 <p>
@@ -63,6 +67,10 @@ Protection (Beta) window:
   <img src="linux/dashboard-welcome.png" width="260" alt="ShieldBar on Linux welcome card">
   <img src="linux/dashboard-inconclusive.png" width="260" alt="ShieldBar on Linux showing an inconclusive result">
   <img src="linux/dashboard-offline.png" width="260" alt="ShieldBar on Linux showing an offline result">
+</p>
+
+<p>
+  <img src="linux/dashboard-update.png" width="260" alt="ShieldBar on Linux showing an update banner">
 </p>
 
 Protection (Beta) window:

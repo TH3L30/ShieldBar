@@ -207,7 +207,7 @@ jobs:
       - name: Generate signed update manifest
         env:
           UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
-        run: node scripts/generate-update-manifest.mjs --output release-assets
+        run: node Scripts/generate-update-manifest.mjs --output release-assets
 
       - name: Generate checksums
         run: |

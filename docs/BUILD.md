@@ -233,7 +233,7 @@ Generate a test manifest locally:
 ```sh
 UPDATE_SIGNING_KEY="$(cat /path/to/private-key.pem)" \
 VERSION=1.1.2 \
-node scripts/generate-update-manifest.mjs --output /tmp/update-feed
+node Scripts/generate-update-manifest.mjs --output /tmp/update-feed
 ```
 
 The release workflow sets `VERSION`/`GITHUB_REF_NAME` and `RELEASED_AT` automatically. Set `UPDATE_NOTICE_JSON` to a valid notice object to include a security message. See [UPDATES.md](UPDATES.md).
