@@ -21,6 +21,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        if CommandLine.arguments.contains("--check-updates") {
+            Task {
+                let controller = UpdateController(monitor: monitor)
+                let result = await controller.check(manual: true)
+                print("Update check: \(result.message)")
+                print("Version: \(controller.viewState.currentVersion) · phase: \(controller.viewState.phase.rawValue)")
+                exit(result.ok ? 0 : 1)
+            }
+            return
+        }
+
         if CommandLine.arguments.contains("--self-test") {
             SelfTest.run()
             return

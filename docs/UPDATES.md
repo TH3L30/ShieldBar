@@ -28,9 +28,9 @@ The manifest contains:
 ```json
 {
   "schema": 1,
-  "version": "1.1.2",
+  "version": "1.1.3",
   "releasedAt": "2026-11-15T00:00:00.000Z",
-  "releaseUrl": "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2",
+  "releaseUrl": "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.3",
   "notice": null
 }
 ```
@@ -43,7 +43,7 @@ An optional notice can carry a short security message:
   "severity": "critical",
   "title": "Security notice",
   "message": "Please update to the latest release.",
-  "url": "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2"
+  "url": "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.3"
 }
 ```
 

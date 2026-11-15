@@ -121,7 +121,7 @@ public enum UpdateVerifier {
         guard isValidVersion(manifest.version) else {
             throw UpdateVerificationError.invalidVersion
         }
-        guard ISO8601DateFormatter().date(from: manifest.releasedAt) != nil else {
+        guard parseDate(manifest.releasedAt) != nil else {
             throw UpdateVerificationError.invalidDate
         }
         guard isAllowedReleaseURL(manifest.releaseUrl) else {
@@ -167,6 +167,16 @@ public enum UpdateVerifier {
             return false
         }
         return !rawValue.contains(" ")
+    }
+
+    private static func parseDate(_ value: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: value) {
+            return date
+        }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: value)
     }
 
     private static func isValidVersion(_ value: String) -> Bool {

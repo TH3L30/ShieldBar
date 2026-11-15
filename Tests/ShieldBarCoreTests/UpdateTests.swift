@@ -108,6 +108,31 @@ struct UpdateTests {
         #expect(parsed.manifest.notice?.severity == .critical)
     }
 
+    @Test func verifiesProductionSignedReleaseFixture() throws {
+        let payload = """
+        {
+          "schema": 1,
+          "version": "1.1.2",
+          "releasedAt": "2026-11-15T02:29:53.394Z",
+          "releaseUrl": "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2",
+          "notice": null
+        }
+
+        """
+        let signature = Data(
+            base64Encoded: "ObGQidix3jRcR0qHzr8QN1gvIFt2+LUO8nKjeRW89JFdxvpcKzYLrXh3HMpTMqfxE05Fkx98IwLErBaj0zyfAw=="
+        )!
+
+        let parsed = try UpdateVerifier.parse(
+            payload: Data(payload.utf8),
+            signature: signature,
+            currentVersion: "1.1.1"
+        )
+
+        #expect(parsed.available)
+        #expect(parsed.manifest.version == "1.1.2")
+    }
+
     @Test func comparesVersionsNumerically() {
         #expect(UpdateVerifier.isNewerVersion("1.2.0", than: "1.1.9"))
         #expect(UpdateVerifier.isNewerVersion("1.1.10", than: "1.1.9"))

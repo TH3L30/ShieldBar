@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	helperVersion   = "1.1.2"
+	helperVersion   = "1.1.3"
 	protocolVersion = 1
 )
 

@@ -164,4 +164,4 @@ None of this local information is transmitted.
 
 ## Changes
 
-If a future version adds persistence, telemetry, or another network destination, this document and the app's behavior must be updated together. The v1.1.2 build has no telemetry; its only non-BrowserLeaks request is the signed update feed described above.
+If a future version adds persistence, telemetry, or another network destination, this document and the app's behavior must be updated together. The v1.1.3 build has no telemetry; its only non-BrowserLeaks request is the signed update feed described above.

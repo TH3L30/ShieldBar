@@ -178,7 +178,7 @@ On Windows and Linux, run the Electron executable with the same flag:
 ShieldBar.exe --restore-network
 
 # Linux AppImage
-./ShieldBar-1.1.2-linux-x86_64.AppImage --restore-network
+./ShieldBar-1.1.3-linux-x86_64.AppImage --restore-network
 ```
 
 For a `.deb` install, use the installed `shieldbar` executable. The helper still needs to be installed and running.

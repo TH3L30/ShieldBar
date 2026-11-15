@@ -172,10 +172,10 @@ Artifacts are written to `desktop/release/`:
 
 | Asset | Format |
 | --- | --- |
-| `ShieldBar-1.1.2-win-x64.exe` | Per-user NSIS installer |
-| `ShieldBar-1.1.2-win-x64.zip` | Portable zip |
-| `ShieldBar-1.1.2-linux-x86_64.AppImage` | AppImage |
-| `ShieldBar-1.1.2-linux-amd64.deb` | Debian package |
+| `ShieldBar-1.1.3-win-x64.exe` | Per-user NSIS installer |
+| `ShieldBar-1.1.3-win-x64.zip` | Portable zip |
+| `ShieldBar-1.1.3-linux-x86_64.AppImage` | AppImage |
+| `ShieldBar-1.1.3-linux-amd64.deb` | Debian package |
 
 The version comes from `desktop/package.json`. Packaging is unsigned and uses `CSC_IDENTITY_AUTO_DISCOVERY=false` in CI. There is no auto-updater.
 
@@ -232,7 +232,7 @@ Generate a test manifest locally:
 
 ```sh
 UPDATE_SIGNING_KEY="$(cat /path/to/private-key.pem)" \
-VERSION=1.1.2 \
+VERSION=1.1.3 \
 node Scripts/generate-update-manifest.mjs --output /tmp/update-feed
 ```
 
@@ -247,9 +247,9 @@ The release workflow sets `VERSION`/`GITHUB_REF_NAME` and `RELEASED_AT` automati
    - the README badges, download table, and asset names
 2. Run the native and Electron test suites, plus both self-tests on a machine with working network access.
 3. Build the macOS app locally and create its zip (`Scripts/build-app.sh` writes `ShieldBar.app.zip`). Run `Scripts/self-test.sh` against the installed bundle.
-4. Commit the version bump and tag it, for example `v1.1.2`.
+4. Commit the version bump and tag it, for example `v1.1.3`.
 5. Let CI create the draft release with the Windows and Linux assets, `latest.json`, `latest.json.sig`, and `SHA256SUMS.txt`.
-6. Attach the macOS arm64 zip manually as `ShieldBar-1.1.2-macos-arm64.zip`. Because CI generated the checksum file before the macOS asset existed, add the macOS checksum and upload the updated `SHA256SUMS.txt`.
+6. Attach the macOS arm64 zip manually as `ShieldBar-1.1.3-macos-arm64.zip`. Because CI generated the checksum file before the macOS asset existed, add the macOS checksum and upload the updated `SHA256SUMS.txt`.
 7. Verify the signed feed with the production public key before publishing.
 8. Smoke-test the installers on clean Windows, Linux, and macOS machines or VMs.
 9. Publish the draft. The public `releases/latest/download/latest.json` URL becomes the next update-check target.

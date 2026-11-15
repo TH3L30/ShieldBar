@@ -3,7 +3,7 @@ import ShieldBarCore
 
 struct UpdateViewState {
     var phase: UpdatePhase = .idle
-    var currentVersion = "1.1.2"
+    var currentVersion = "1.1.3"
     var latestVersion: String?
     var releaseURL: URL?
     var notice: UpdateNotice?

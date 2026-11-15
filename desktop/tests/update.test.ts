@@ -130,6 +130,30 @@ describe('update manifest verification', () => {
   })
 })
 
+describe('production signed release fixture', () => {
+  it('verifies the live 1.1.2 feed with the embedded public key', () => {
+    const payload = Buffer.from(
+      `{
+  "schema": 1,
+  "version": "1.1.2",
+  "releasedAt": "2026-11-15T02:29:53.394Z",
+  "releaseUrl": "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2",
+  "notice": null
+}
+`
+    )
+    const signature = Buffer.from(
+      'ObGQidix3jRcR0qHzr8QN1gvIFt2+LUO8nKjeRW89JFdxvpcKzYLrXh3HMpTMqfxE05Fkx98IwLErBaj0zyfAw==',
+      'base64'
+    )
+
+    const parsed = parseUpdateManifest(payload, signature, '1.1.1')
+
+    expect(parsed.available).toBe(true)
+    expect(parsed.manifest.version).toBe('1.1.2')
+  })
+})
+
 describe('update version rules', () => {
   it('compares numeric segments', () => {
     expect(isNewerVersion('1.2.0', '1.1.9')).toBe(true)

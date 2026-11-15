@@ -1,6 +1,6 @@
 {
   "name": "shieldbar",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "private": true,
   "description": "Public IP and WebRTC leak monitor for the Windows and Linux system tray",
   "author": "TH3L30 <its.mani.brz@gmail.com>",

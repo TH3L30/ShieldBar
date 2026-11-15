@@ -23,7 +23,7 @@ final class UpdateController: ObservableObject {
     init(monitor: Monitor) {
         self.monitor = monitor
         let current = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-            ?? "1.1.2"
+            ?? "1.1.3"
         let auto = defaults.object(forKey: Keys.autoCheck) as? Bool ?? true
         viewState = UpdateViewState(
             phase: auto ? .idle : .disabled,

@@ -142,12 +142,12 @@ export function previewState(name: PreviewName | null): ShieldState | null {
         ...baseState(clearReport()),
         update: {
           phase: 'available',
-          currentVersion: '1.1.1',
-          latestVersion: '1.1.2',
+          currentVersion: '1.1.2',
+          latestVersion: '1.1.3',
           releaseUrl:
-            'https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2',
+            'https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.3',
           notice: null,
-          message: 'ShieldBar 1.1.2 is available.',
+          message: 'ShieldBar 1.1.3 is available.',
           autoCheck: true,
           dismissed: false,
           noticeSeen: true,

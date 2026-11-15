@@ -144,12 +144,12 @@ enum PreviewRenderer {
     private static func renderUpdatePreview(to directory: URL) {
         var updateState = UpdateViewState()
         updateState.phase = .available
-        updateState.currentVersion = "1.1.1"
-        updateState.latestVersion = "1.1.2"
+        updateState.currentVersion = "1.1.2"
+        updateState.latestVersion = "1.1.3"
         updateState.releaseURL = URL(
-            string: "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.2"
+            string: "https://github.com/TH3L30/ShieldBar/releases/tag/v1.1.3"
         )
-        updateState.message = "ShieldBar 1.1.2 is available."
+        updateState.message = "ShieldBar 1.1.3 is available."
         updateState.autoCheck = true
         updateState.dismissed = false
         updateState.noticeSeen = true
@@ -254,7 +254,7 @@ enum PreviewRenderer {
         var state = ProtectionViewState()
         state.phase = triggered ? .triggered : .ready
         state.helperInstalled = true
-        state.helperVersion = "1.1.2"
+        state.helperVersion = "1.1.3"
         state.settings = ProtectionSettings(
             enabled: true,
             killOnPublicLeak: true,
