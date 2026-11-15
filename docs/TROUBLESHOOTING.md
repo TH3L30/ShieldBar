@@ -61,6 +61,10 @@ The app cannot reach the helper. Either it was never installed, its service is s
 
 Reinstall from **Protection… → Install helper**. A reinstall is also the right fix after an app update that changes the helper protocol.
 
+### PowerShell `PositionalParameterNotFound` during install
+
+This was a 1.1.2 bug in the generated Windows command: `exit` was joined to `Start-Process` as another argument. Update to 1.1.2 or later and use **Repair helper**. The current command uses separate PowerShell statements and no `-WindowStyle` on the elevated path.
+
 ### Administrator approval was canceled
 
 The helper is not installed and no interfaces were changed. Retry and approve the prompt. On Linux, run ShieldBar from a graphical desktop session with a polkit authentication agent available; `pkexec` needs one.

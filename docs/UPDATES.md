@@ -68,6 +68,7 @@ Tag the release and the workflow uploads `latest.json` and `latest.json.sig` alo
 ## Troubleshooting
 
 - **“The update feed is unavailable”** — GitHub may be unreachable or the latest release may not have a manifest yet.
+- **“The request timed out” with a firewall installed** — Little Snitch, LuLu, or a corporate firewall may be holding the first connection. Allow ShieldBar outbound access to `github.com` and `objects.githubusercontent.com`.
 - **“The update manifest signature is invalid”** — do not trust the feed. Check the release assets and signing key.
 - **No banner appears** — the version may already be current, the update may be dismissed, or automatic checks may be disabled.
 - **No notification** — the OS may have notifications disabled for ShieldBar.
